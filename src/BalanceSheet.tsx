@@ -12,59 +12,100 @@ type Props = {
   onClose: () => void;
 };
 
+type Mode = "fix" | "compare";
+
 /**
- * "How much do you really have?" Compares it with what the app expects and shows the gap.
- * The first time, the app assumes the month started at zero plus salary.
+ * Two jobs:
+ * - Fix: correct the number (a typo). Starts with the current balance filled in. Nothing else is added.
+ * - Compare: type what the bank shows. The gap becomes one Untracked spend (or Money in).
+ * The first time there is no balance yet, so only Compare makes sense.
  */
 export function BalanceSheet({ data, onSave, onClose }: Props) {
-  const [amount, setAmount] = useState("");
-  const actual = amount.trim() === "0" ? 0 : parseAmount(amount);
-  const firstTime = balance(data) === null;
+  const current = balance(data);
+  const firstTime = current === null;
+  const [mode, setMode] = useState<Mode>(firstTime ? "compare" : "fix");
+  const [amount, setAmount] = useState(mode === "fix" && current !== null ? String(current) : "");
+
+  const actual = /^0+(\.0*)?$/.test(amount) ? 0 : parseAmount(amount);
   const expected = expectedBalance(data, today());
-  const gap = actual === null ? 0 : expected - actual;
+  const gap = actual === null ? 0 : Math.round((expected - actual) * 100) / 100;
+
+  function switchMode(m: Mode) {
+    setMode(m);
+    setAmount(m === "fix" && current !== null ? String(current) : "");
+  }
 
   return (
-    <Sheet title={firstTime ? "Set your balance" : "Check balance"} onClose={onClose}>
+    <Sheet title={firstTime ? "Set your balance" : "Balance"} onClose={onClose}>
       {(close) => (
         <form
           className="stack"
           onSubmit={(e) => {
             e.preventDefault();
             if (actual === null) return;
-            onSave(actual, true);
+            onSave(actual, mode === "compare");
             close();
           }}
         >
-          <p className="muted small-text">
-            Money you can spend right now: bank + UPI + cash. Don't count your SIP or emergency fund.
+          {!firstTime && (
+            <div className="segmented" role="radiogroup" aria-label="What do you want to do?">
+              <span className={mode === "fix" ? "seg-thumb" : "seg-thumb right"} aria-hidden />
+              <button type="button" role="radio" aria-checked={mode === "fix"} className={mode === "fix" ? "seg on" : "seg"} onClick={() => switchMode("fix")}>
+                Fix the number
+              </button>
+              <button type="button" role="radio" aria-checked={mode === "compare"} className={mode === "compare" ? "seg on" : "seg"} onClick={() => switchMode("compare")}>
+                Compare with bank
+              </button>
+            </div>
+          )}
+
+          <p className="hint-text">
+            {mode === "fix"
+              ? "Typed it wrong? Change the number. Nothing else gets added."
+              : "Type the money you can spend right now: bank + UPI + cash. Leave out SIP and emergency fund."}
           </p>
+
           <label className="amount-wrap">
             <span className="amount-prefix">₹</span>
-            <input className="amount-input" inputMode="decimal" placeholder="0" autoFocus value={amount} onChange={(e) => setAmount(cleanAmountInput(e.target.value))} aria-label="Money you have now" />
+            <input
+              key={mode}
+              className="amount-input"
+              inputMode="decimal"
+              placeholder="0"
+              autoFocus
+              value={amount}
+              onChange={(e) => setAmount(cleanAmountInput(e.target.value))}
+              onFocus={(e) => mode === "fix" && e.target.select()}
+              aria-label="Money you have now"
+            />
           </label>
 
-          <div className="card compare">
-            <div className="jar-top">
-              <span className="muted">{firstTime ? "Expected (salary − tracked this month)" : "App expected"}</span>
-              <b>{rupees(expected)}</b>
-            </div>
-            {actual !== null && (
-              <div className="jar-top">
-                <span className="muted">{gap > 0 ? "Untracked spend" : gap < 0 ? "Extra money" : "Difference"}</span>
-                <b className={gap > 0 ? "neg" : gap < 0 ? "pos" : ""}>{gap === 0 ? "None 🎉" : rupees(Math.abs(gap))}</b>
+          {mode === "compare" && (
+            <>
+              <div className="card compare">
+                <div className="compare-row">
+                  <span className="muted">{firstTime ? "Expected (salary − tracked this month)" : "App expected"}</span>
+                  <b>{rupees(expected)}</b>
+                </div>
+                {actual !== null && (
+                  <div className="compare-row">
+                    <span className="muted">{gap > 0 ? "Untracked spend" : gap < 0 ? "Extra money" : "Difference"}</span>
+                    <b className={gap > 0 ? "neg" : gap < 0 ? "pos" : ""}>{gap === 0 ? "None 🎉" : rupees(Math.abs(gap))}</b>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {actual !== null && gap > 0 && (
-            <p className="muted small-text">
-              {rupees(gap)} will be added as one ❓ Untracked spend. If you remember later, open it and move it to the right jar.
-            </p>
+              {actual !== null && gap > 0 && (
+                <p className="hint-text">
+                  {rupees(gap)} becomes one ❓ Untracked spend. When you remember something, add it with "Old spend? Take from Untracked".
+                </p>
+              )}
+            </>
           )}
 
           <button className="primary" type="submit" disabled={actual === null}>
-            {gap === 0 ? "Save balance" : gap > 0 ? `Save + add ${rupees(gap)} untracked` : `Save + add ${rupees(-gap)} money in`}
+            {mode === "fix" ? "Save balance" : gap === 0 ? "Save balance" : gap > 0 ? `Save + add ${rupees(gap)} untracked` : `Save + add ${rupees(-gap)} money in`}
           </button>
-          {actual !== null && gap !== 0 && (
+          {mode === "compare" && actual !== null && gap !== 0 && (
             <button
               type="button"
               className="secondary"

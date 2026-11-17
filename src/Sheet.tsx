@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Icons } from "./ui";
 
-const EXIT_MS = 220;
+// Exit is faster than enter: the system responding should feel snappy.
+const EXIT_MS = 200;
 
 /**
  * Bottom sheet. Closes by backdrop tap, Escape, or dragging the top bar down.
+ * A quick flick closes it too, even if it's short. Dragging up meets growing resistance.
  * `children` gets a `close` function so forms can play the exit animation after saving.
  * `onClose` runs once the exit animation is done.
  */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false);
   const [drag, setDrag] = useState(0);
-  const startY = useRef<number | null>(null);
+  const start = useRef<{ y: number; t: number; id: number } | null>(null);
   const closed = useRef(false);
 
   const close = useCallback(() => {
@@ -24,37 +26,49 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Keep the page behind from scrolling while the sheet is open.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
   }, [close]);
 
-  const dragging = startY.current !== null;
+  const dragging = start.current !== null;
 
   return (
     <div className={closing ? "backdrop out" : "backdrop"} onClick={close}>
       <div
-        className="sheet"
+        className={closing ? "sheet out" : "sheet"}
         role="dialog"
+        aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
-        style={{
-          transform: closing ? "translateY(100%)" : drag ? `translateY(${drag}px)` : undefined,
-          transition: dragging ? "none" : undefined,
-        }}
+        style={closing ? undefined : { transform: drag ? `translateY(${drag}px)` : undefined, transition: dragging ? "none" : undefined }}
       >
         <div
           className="sheet-head"
           onPointerDown={(e) => {
-            startY.current = e.clientY;
-            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+            if (start.current) return; // ignore a second finger
+            start.current = { y: e.clientY, t: performance.now(), id: e.pointerId };
+            e.currentTarget.setPointerCapture(e.pointerId);
           }}
-          onPointerMove={(e) => startY.current !== null && setDrag(Math.max(0, e.clientY - startY.current))}
-          onPointerUp={() => {
-            startY.current = null;
-            if (drag > 90) close();
+          onPointerMove={(e) => {
+            if (!start.current || e.pointerId !== start.current.id) return;
+            const dy = e.clientY - start.current.y;
+            // Down follows the finger. Up gets heavy fast.
+            setDrag(dy >= 0 ? dy : -Math.sqrt(-dy) * 2);
+          }}
+          onPointerUp={(e) => {
+            if (!start.current || e.pointerId !== start.current.id) return;
+            const velocity = drag / Math.max(1, performance.now() - start.current.t);
+            start.current = null;
+            if (drag > 100 || (drag > 24 && velocity > 0.45)) close();
             else setDrag(0);
           }}
           onPointerCancel={() => {
-            startY.current = null;
+            start.current = null;
             setDrag(0);
           }}
         >

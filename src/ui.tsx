@@ -75,8 +75,8 @@ export const Icons = {
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-/** Animates from the old value to the new one (ease-out, ~600ms). Used for big money numbers. */
-export function useCountUp(value: number, ms = 600): number {
+/** Animates from the old value to the new one (ease-out, ~450ms). Shows that a money number changed. */
+export function useCountUp(value: number, ms = 450): number {
   const [shown, setShown] = useState(value);
   const from = useRef(value);
 
@@ -106,3 +106,45 @@ export function useCountUp(value: number, ms = 600): number {
 
 /** Stagger index for list enter animations: style={stagger(i)}. */
 export const stagger = (i: number) => ({ "--i": Math.min(i, 12) }) as CSSProperties;
+
+/** Short buzz on phones that support it (Android). Confirms a save without looking. */
+export function haptic() {
+  try {
+    navigator.vibrate?.(8);
+  } catch {
+    // Not supported. Fine.
+  }
+}
+
+/** True once the page is scrolled past the big title. Drives the small top bar. */
+export function useScrolled(offset = 56): boolean {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > offset);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [offset]);
+  return scrolled;
+}
+
+/** Circular progress around the jar emoji. `ratio` is 0..1 of the limit used. */
+export function Ring({ jar, ratio, over, size = 52 }: { jar: JarId; ratio: number; over: boolean; size?: number }) {
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const len = 2 * Math.PI * r;
+  const look = JAR_LOOK[jar];
+  return (
+    <span className={over ? "ring over" : "ring"} style={{ "--c": look.color, "--len": len, width: size, height: size } as CSSProperties} aria-hidden>
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+        <circle className="ring-track" cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} />
+        {ratio > 0 && (
+          <circle className="ring-fill" cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} strokeDasharray={len} strokeDashoffset={len * (1 - Math.min(1, ratio))} />
+        )}
+      </svg>
+      <span className="ring-icon" style={{ fontSize: size * 0.4 }}>
+        {look.icon}
+      </span>
+    </span>
+  );
+}

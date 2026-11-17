@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
 import { addMonths, balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth } from "./money";
 import type { Data, JarId, Spend } from "./types";
-import { Icons, JAR_LOOK, JarIcon, stagger, useCountUp } from "./ui";
+import { Icons, JAR_LOOK, JarIcon, Ring, stagger, useCountUp } from "./ui";
 
 type HomeProps = {
   data: Data;
@@ -11,11 +11,12 @@ type HomeProps = {
   onMonth: (m: string) => void;
   onOpenJar: (jar: JarId) => void;
   onAddFixed: () => void;
-  onCheckBalance: () => void;
+  // Opens the balance sheet: fix the number, or compare with the bank.
+  onEditBalance: () => void;
 };
 
 /** Month overview: real money left, this month's plan, then one card per jar. */
-export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFixed, onCheckBalance }: HomeProps) {
+export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFixed, onEditBalance }: HomeProps) {
   const jars = jarSummaries(data, month);
   const remaining = overallRemaining(data, month);
   const income = data.settings.income;
@@ -48,17 +49,19 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
         <div className="hero-row">
           <span className="hero-label">Money left now</span>
           {money !== null && (
-            <button className="hero-chip" onClick={onCheckBalance}>
-              Check
+            <button className="hero-chip" onClick={onEditBalance}>
+              Edit
             </button>
           )}
         </div>
         {money !== null ? (
-          <strong className={money < 0 ? "hero-num neg" : "hero-num"}>{rupees(shownMoney)}</strong>
+          <button className="hero-num-btn" onClick={onEditBalance} aria-label={`Money left ${rupees(money)}. Edit balance`}>
+            <strong className={money < 0 ? "hero-num neg" : "hero-num"}>{rupees(shownMoney)}</strong>
+          </button>
         ) : (
           <div className="hero-setup">
             <span>Tell the app how much money you have right now. It will find what you didn't track.</span>
-            <button className="primary small" onClick={onCheckBalance}>
+            <button className="primary small" onClick={onEditBalance}>
               Set balance
             </button>
           </div>
@@ -68,7 +71,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
           <div className="hero-foot">
             <span>This month's plan</span>
             <span className={remaining < 0 ? "neg" : ""}>
-              {rupees(shownRemaining)} left of {rupees(income)}
+              {rupees(shownRemaining)} <span className="hero-of">of {rupees(income)}</span>
             </span>
           </div>
           <div className="bar hero-bar">
@@ -107,28 +110,26 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
       )}
 
       <h2 className="section-title">Jars</h2>
-      <section className="jars">
+      <section className="tiles">
         {jars.map((j, i) => {
-          const ratio = j.limit > 0 ? Math.min(1, j.spent / j.limit) : j.spent > 0 ? 1 : 0;
+          const ratio = j.limit > 0 ? j.spent / j.limit : j.spent > 0 ? 1 : 0;
           const over = j.spent > j.limit;
           return (
-            <button key={j.id} className="jar enter" style={{ ...stagger(i + 2), "--c": JAR_LOOK[j.id].color } as CSSProperties} onClick={() => onOpenJar(j.id)}>
-              <JarIcon jar={j.id} />
-              <div className="jar-body">
-                <div className="jar-top">
-                  <span className="jar-name">{j.name}</span>
-                  <span className={over ? "jar-left neg" : "jar-left"}>{over ? `${rupees(-j.left)} over` : `${rupees(j.left)} left`}</span>
-                </div>
-                <div className={over ? "bar over" : "bar"}>
-                  <div style={{ transform: `scaleX(${ratio})` }} />
-                </div>
-                <span className="muted small-text">
-                  {rupees(j.spent)} of {rupees(j.limit)}
-                </span>
-              </div>
+            <button key={j.id} className={over ? "tile over enter" : "tile enter"} style={{ ...stagger(i + 2), "--c": JAR_LOOK[j.id].color } as CSSProperties} onClick={() => onOpenJar(j.id)}>
+              <Ring jar={j.id} ratio={ratio} over={over} />
+              <span className="tile-name">{j.name}</span>
+              <span className={over ? "tile-left neg" : "tile-left"}>
+                {rupees(over ? -j.left : j.left)}
+                <small>{over ? " over" : " left"}</small>
+              </span>
+              <span className="tile-of">
+                {rupees(j.spent)} of {rupees(j.limit)}
+              </span>
             </button>
           );
         })}
+      </section>
+      <section className="jars extras">
         {extras.map((j, i) => (
           <button key={j.id} className="jar outside enter" style={stagger(jars.length + 2 + i)} onClick={() => onOpenJar(j.id)}>
             <JarIcon jar={j.id} />

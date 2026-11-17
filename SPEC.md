@@ -171,7 +171,9 @@ Focused unit tests (Vitest) for the money logic only:
   salary − everything tracked this month (+/− friend money). The gap becomes one
   ❓ **Untracked** spend ("Not sure where it went"). I can edit it later and move
   it to the right jar. Or I can skip the gap and just set the balance.
-- Later: "Check" does the same compare against the running balance.
+- Later: tap **Edit** (or the big number). Two choices:
+  - **Fix the number**: the current balance is filled in. Change it, nothing else is added.
+  - **Compare with bank**: type what the bank shows. The gap becomes Untracked (or Money in).
 - Balance = balance I entered + money in − spends + friend "got" − friend "gave",
   for every entry dated on or after the day I entered it.
 - "This month's plan" (income − spends this month) stays under it.
@@ -199,6 +201,17 @@ Untracked is not in the jar list. It is only made by the balance check.
 All entries of a month in one list, like a UPI app: spends, money in, friend
 money. Grouped by day with a day total. Money in / Money out totals on top.
 Tap a spend or money in to edit it.
+
+## Look and feel
+
+- Mobile first: works from 320px phones up. Text and big numbers scale with the screen.
+- Safe areas for notches and the home bar. Inputs are 16px+ so iOS never zooms.
+- Jars show as 2-column tiles with a ring per jar (1 column on very small phones).
+- A small top bar with the page title shows once the big title scrolls away.
+- Sheets: swipe down or flick to close. Saved entries open read-only first.
+- Motion stays under 300ms for UI (sheets ~380ms). Exits are faster than enters.
+  With "reduce motion" on, only gentle fades stay.
+- A short buzz on save (Android).
 
 ## Hosting
 

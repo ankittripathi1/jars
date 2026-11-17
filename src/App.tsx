@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { BalanceSheet } from "./BalanceSheet";
-import { rupees } from "./format";
+import { monthLabel, rupees } from "./format";
 import { Friends, FriendSheet } from "./Friends";
 import { History } from "./History";
 import { Home, JarDetail } from "./Home";
@@ -9,7 +9,7 @@ import { Settings } from "./Settings";
 import { SpendSheet } from "./SpendSheet";
 import { newId, today, useData } from "./store";
 import type { FriendEntry, Income, JarId, Spend } from "./types";
-import { Icons } from "./ui";
+import { haptic, Icons, useScrolled } from "./ui";
 
 type Tab = "home" | "history" | "friends" | "settings";
 type SheetState = { mode: "add" } | { mode: "edit"; kind: "spend"; item: Spend } | { mode: "edit"; kind: "income"; item: Income } | { mode: "balance" } | { mode: "friend"; item: FriendEntry } | null;
@@ -46,6 +46,8 @@ export function App() {
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  const scrolled = useScrolled();
+
   const showToast = useCallback((text: string, undo?: () => void) => {
     clearTimeout(toastTimer.current);
     setToast({ id: Date.now(), text, undo });
@@ -66,6 +68,7 @@ export function App() {
   function change(fn: (d: typeof data) => typeof data, text: string, undoable = true) {
     const before = data;
     update(fn);
+    haptic();
     showToast(text, undoable ? () => update(() => before) : undefined);
   }
 
@@ -106,9 +109,18 @@ export function App() {
   const changeMonth = (m: string) => go(m > month ? "fwd" : "back", () => setMonth(m));
 
   const pageKey = `${tab}-${openJar ?? ""}-${month}`;
+  // New page starts at the top, like a native app.
+  useEffect(() => window.scrollTo({ top: 0 }), [pageKey]);
+
+  // Small title in the top bar once the big page title scrolls away.
+  const barTitle =
+    tab === "home" ? (openJar ? jarName(openJar) : monthLabel(month)) : tab === "history" ? `History · ${monthLabel(month)}` : tab === "friends" ? "Friends" : "Settings";
 
   return (
     <div className="app">
+      <header className={scrolled ? "topbar on" : "topbar"} aria-hidden={!scrolled}>
+        <span>{barTitle}</span>
+      </header>
       <main key={pageKey} className={`page ${dir}`}>
         {tab === "home" &&
           (openJar ? (
@@ -121,7 +133,7 @@ export function App() {
               onMonth={changeMonth}
               onOpenJar={(j) => go("fwd", () => setOpenJar(j))}
               onAddFixed={() => change((d) => addFixedSpends(d, month, newId), "Salary and fixed spends added")}
-              onCheckBalance={() => setSheet({ mode: "balance" })}
+              onEditBalance={() => setSheet({ mode: "balance" })}
             />
           ))}
         {tab === "history" && (
