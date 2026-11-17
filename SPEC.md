@@ -213,7 +213,8 @@ Tap a spend or money in to edit it.
   a blank page. Saved data is cleaned on load, so one broken row can't crash it.
 - Mobile first: works from 320px phones up. Text and big numbers scale with the screen.
 - Safe areas for notches and the home bar. Inputs are 16px+ so iOS never zooms.
-- Jars show as 2-column tiles with a ring per jar (1 column on very small phones).
+- Jars show as one compact list: a small ring per jar, full name, "spent of limit",
+  and what is left on the right.
 - A small top bar with the page title shows once the big title scrolls away.
 - Sheets: swipe down or flick to close. Saved entries open read-only first.
 - Motion stays under 300ms for UI (sheets ~380ms). Exits are faster than enters.

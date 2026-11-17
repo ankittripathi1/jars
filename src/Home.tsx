@@ -110,35 +110,37 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
       )}
 
       <h2 className="section-title">Jars</h2>
-      <section className="tiles">
+      <section className="jar-list">
         {jars.map((j, i) => {
           const ratio = j.limit > 0 ? j.spent / j.limit : j.spent > 0 ? 1 : 0;
           const over = j.spent > j.limit;
           return (
-            <button key={j.id} className={over ? "tile over enter" : "tile enter"} style={{ ...stagger(i + 2), "--c": JAR_LOOK[j.id].color } as CSSProperties} onClick={() => onOpenJar(j.id)}>
-              <Ring jar={j.id} ratio={ratio} over={over} />
-              <span className="tile-name">{j.name}</span>
-              <span className={over ? "tile-left neg" : "tile-left"}>
-                {rupees(over ? -j.left : j.left)}
-                <small>{over ? " over" : " left"}</small>
+            <button key={j.id} className="jar-row enter" style={{ ...stagger(i + 2), "--c": JAR_LOOK[j.id].color } as CSSProperties} onClick={() => onOpenJar(j.id)}>
+              <Ring jar={j.id} ratio={ratio} over={over} size={40} />
+              <span className="jar-row-text">
+                <span className="jar-row-name">{j.name}</span>
+                <span className="jar-row-sub">
+                  {rupees(j.spent)} of {rupees(j.limit)}
+                </span>
               </span>
-              <span className="tile-of">
-                {rupees(j.spent)} of {rupees(j.limit)}
+              <span className={over ? "jar-row-left neg" : "jar-row-left"}>
+                {rupees(over ? -j.left : j.left)}
+                <small>{over ? "over" : "left"}</small>
               </span>
             </button>
           );
         })}
-      </section>
-      <section className="jars extras">
         {extras.map((j, i) => (
-          <button key={j.id} className="jar outside enter" style={stagger(jars.length + 2 + i)} onClick={() => onOpenJar(j.id)}>
-            <JarIcon jar={j.id} />
-            <div className="jar-body">
-              <div className="jar-top">
-                <span className="jar-name">{j.name}</span>
-                <span className="jar-left">{rupees(j.spent)} spent</span>
-              </div>
-            </div>
+          <button key={j.id} className="jar-row enter" style={stagger(jars.length + 2 + i)} onClick={() => onOpenJar(j.id)}>
+            <JarIcon jar={j.id} size={40} />
+            <span className="jar-row-text">
+              <span className="jar-row-name">{j.name}</span>
+              <span className="jar-row-sub">Not part of any limit</span>
+            </span>
+            <span className="jar-row-left">
+              {rupees(j.spent)}
+              <small>spent</small>
+            </span>
           </button>
         ))}
       </section>

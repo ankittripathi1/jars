@@ -130,7 +130,7 @@ export function useScrolled(offset = 56): boolean {
 
 /** Circular progress around the jar emoji. `ratio` is 0..1 of the limit used. */
 export function Ring({ jar, ratio, over, size = 52 }: { jar: JarId; ratio: number; over: boolean; size?: number }) {
-  const stroke = 5;
+  const stroke = Math.max(3, Math.round(size / 11));
   const r = (size - stroke) / 2;
   const len = 2 * Math.PI * r;
   const look = JAR_LOOK[jar];
