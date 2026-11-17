@@ -8,6 +8,9 @@ import { Icons, JAR_LOOK, JarIcon, stagger } from "./ui";
 type Props = {
   data: Data;
   onSettings: (s: SettingsT) => void;
+  onName: (name: string) => void;
+  // Shows the first-run setup again (data is kept).
+  onRunSetup: () => void;
   onRestore: (d: Data) => void;
 };
 
@@ -15,7 +18,7 @@ type Props = {
 const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
 /** Amount box that lets you type "15." on the way to "15.5". Reports 0 while empty. */
-function MoneyInput({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+export function MoneyInput({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
   const [text, setText] = useState(value ? String(value) : "");
   // Follow outside changes (like a restored backup) without fighting the user's typing.
   useEffect(() => {
@@ -37,7 +40,7 @@ function MoneyInput({ value, onChange, label }: { value: number; onChange: (n: n
 }
 
 /** Income, jar shares, fixed monthly spends, and backup. Changes save right away. */
-export function Settings({ data, onSettings, onRestore }: Props) {
+export function Settings({ data, onSettings, onName, onRunSetup, onRestore }: Props) {
   const s = data.settings;
   const total = sharesTotal(s);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -49,6 +52,10 @@ export function Settings({ data, onSettings, onRestore }: Props) {
       </header>
 
       <section className="card stack enter" style={stagger(0)}>
+        <label className="field">
+          <span className="field-label">Your name</span>
+          <input value={data.name ?? ""} placeholder="Name (optional)" onChange={(e) => onName(e.target.value)} />
+        </label>
         <label className="field">
           <span className="field-label">Monthly income</span>
           <span className="amount-wrap small">
@@ -138,6 +145,11 @@ export function Settings({ data, onSettings, onRestore }: Props) {
             if (confirm("Replace all current data with this backup?")) onRestore(restored);
           }}
         />
+      </section>
+      <section className="card stack enter setup-again" style={stagger(4)}>
+        <button className="secondary" onClick={onRunSetup}>
+          Run setup again
+        </button>
       </section>
     </>
   );

@@ -14,10 +14,10 @@ type Props = {
   // Present when editing. The kind can't change while editing.
   editing?: { kind: "spend"; item: Spend } | { kind: "income"; item: Income };
   defaultJar: JarId;
-  // Untracked money left in a month ("YYYY-MM"), and the day I last set my balance.
+  // Untracked money left in a month ("YYYY-MM"), worked out live.
   untrackedLeft: (month: string) => number;
-  // fromUntracked: a past spend I just remembered, paid out of the Untracked amount (not my balance).
-  onSaveSpend: (spend: Omit<Spend, "id">, fromUntracked: boolean) => void;
+  // spend.fromUntracked = an old spend I just remembered: it explains Untracked money, not my balance.
+  onSaveSpend: (spend: Omit<Spend, "id">) => void;
   onSaveIncome: (income: Omit<Income, "id">) => void;
   onDelete?: () => void;
   // Runs after the exit animation.
@@ -36,14 +36,18 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
   const [note, setNote] = useState(editing?.item.note ?? "");
   const [date, setDate] = useState(editing?.item.date ?? today());
 
-  // Where the money came from. Always "balance" unless I pick Untracked.
-  const [source, setSource] = useState<"balance" | "untracked">("balance");
+  // Marked as "Untracked money" (an old spend). Off unless I turn it on.
+  const wasFlagged = editing?.kind === "spend" && editing.item.fromUntracked === true;
+  const [flag, setFlag] = useState(wasFlagged);
   const [viewing, setViewing] = useState(editing !== undefined);
 
   const parsed = parseAmount(amount);
-  const untracked = untrackedLeft(monthOf(date));
-  const canUseUntracked = !editing && kind === "spend" && untracked > 0;
-  const fromUntracked = canUseUntracked && source === "untracked";
+  // How much Untracked money this spend can explain. When editing a marked spend, its own amount is free again.
+  const room =
+    untrackedLeft(monthOf(date)) + (wasFlagged && editing?.kind === "spend" && monthOf(editing.item.date) === monthOf(date) ? editing.item.amount : 0);
+  const canUseUntracked = kind === "spend" && jar !== "untracked" && (room > 0 || wasFlagged);
+  const fromUntracked = canUseUntracked && flag;
+  const tooBig = fromUntracked && parsed !== null && parsed > room;
   // Untracked is not a real category. It only shows up when editing an Untracked entry itself.
   const jarChoices = ALL_JARS.filter((j) => j.id !== "untracked" || jar === "untracked");
   const chips = editing || kind === "income" ? [] : recentNotes(spends);
@@ -70,6 +74,7 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
               [e.kind === "spend" ? "Jar" : "Type", e.kind === "spend" ? `${JAR_LOOK[e.item.jar].icon} ${jarName(e.item.jar)}` : "💰 Money in"],
               ["Date", fullDateLabel(e.item.date)],
               ["Note", e.item.note || <span className="muted">No note</span>],
+              ...(e.kind === "spend" && e.item.fromUntracked ? [["Paid from", "❓ Untracked money"] as [string, string]] : []),
             ]}
             onEdit={() => setViewing(false)}
             onDelete={() => {
@@ -91,7 +96,8 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
             e.preventDefault();
             if (parsed === null) return;
             const base = { amount: parsed, note: note.trim(), date };
-            if (kind === "spend") onSaveSpend({ ...base, jar }, fromUntracked);
+            if (tooBig) return;
+            if (kind === "spend") onSaveSpend({ ...base, jar, ...(fromUntracked ? { fromUntracked: true } : {}) });
             else onSaveIncome(base);
             close();
           }}
@@ -172,26 +178,20 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
 
           {canUseUntracked && (
             <div className="from-untracked">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={fromUntracked}
-                className={fromUntracked ? "mini-chip on" : "mini-chip"}
-                onClick={() => setSource(fromUntracked ? "balance" : "untracked")}
-              >
-                {fromUntracked ? "✓ From Untracked" : "Old spend? Take from Untracked"}
+              <button type="button" role="switch" aria-checked={fromUntracked} className={fromUntracked ? "mini-chip on" : "mini-chip"} onClick={() => setFlag(!fromUntracked)}>
+                {fromUntracked ? "✓ Untracked money (old spend)" : "Untracked money (old spend)"}
               </button>
               {fromUntracked && (
-                <span className="muted small-text">
-                  {parsed !== null && parsed > untracked
-                    ? `Only ${rupees(untracked)} left in Untracked. The other ${rupees(parsed - untracked)} comes from your balance.`
-                    : `Comes out of the ${rupees(untracked)} untracked. Balance stays the same.`}
+                <span className={tooBig ? "neg small-text" : "muted small-text"}>
+                  {tooBig
+                    ? `Only ${rupees(room)} is untracked this month. Lower the amount or turn this off.`
+                    : `Explains part of the ${rupees(room)} untracked. Your balance stays the same.`}
                 </span>
               )}
             </div>
           )}
 
-          <button className="primary" type="submit" disabled={parsed === null}>
+          <button className="primary" type="submit" disabled={parsed === null || tooBig}>
             {editing ? "Save" : parsed ? `Add ${kind === "income" ? "+" : ""}${rupees(parsed)}` : "Add"}
           </button>
           {onDelete && (

@@ -11,6 +11,8 @@ export type Spend = {
   jar: JarId;
   note: string;
   date: string;
+  // An old spend I just remembered: it explains part of the Untracked money and never moves my balance.
+  fromUntracked?: boolean;
 };
 
 /** Money in: salary, refunds, anything that adds to my balance (not friend money). */
@@ -47,7 +49,12 @@ export type Data = {
   friends: FriendEntry[];
   // Months ("YYYY-MM") where fixed spends and salary were already added.
   fixedAddedFor: string[];
-  // Spendable money at the start of `date`. Every entry dated on or after it moves the balance.
+  // My balance check. `amount` + every entry dated on or after `date` = spendable money now.
+  // `opening` = spendable money at the start of that month before salary (0 for the first check).
   // Missing until I first enter my real balance.
-  balanceStart?: { date: string; amount: number };
+  balanceStart?: { date: string; amount: number; opening: number };
+  // Shown in the greeting. Set in the first-run setup or Settings.
+  name?: string;
+  // True once the first-run setup is done (or skipped).
+  onboarded?: boolean;
 };

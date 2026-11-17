@@ -167,37 +167,42 @@ Focused unit tests (Vitest) for the money logic only:
 
 - Home shows **Money left now**: spendable money (bank + UPI + cash, not SIP or
   emergency fund). It carries over across months.
-- First time: "Set balance". I type what I have now. The app expects
-  salary − everything tracked this month (+/− friend money). The gap becomes one
-  ❓ **Untracked** spend ("Not sure where it went"). I can edit it later and move
-  it to the right jar. Or I can skip the gap and just set the balance.
-- Later: tap **Edit** (or the big number). Two choices:
-  - **Fix the number**: the current balance is filled in. Change it, nothing else is added.
-  - **Compare with bank**: type what the bank shows. The gap becomes Untracked (or Money in).
-    A small **Start this month over** chip compares with salary − this month's
-    spends instead (like the first time) and replaces earlier auto entries. Use it
-    if the balance was set before the income, or the gap was skipped.
-- Balance = balance I entered + money in − spends + friend "got" − friend "gave",
-  for every entry dated on or after the day I entered it.
-- "This month's plan" (income − spends this month) stays under it.
+- I set it in the first-run setup, or any time with **Edit** (or by tapping the
+  number). One box, filled with the current balance. Fixing a typo and matching
+  the bank are the same action.
+- Balance = what I entered + every entry dated on or after that day.
+  Spends marked "Untracked money" never move it.
+- "This month's plan" (income − spends − Untracked) stays under it.
 
 ### Money in
 
 The add sheet has a Spend / Money in switch. Money in is salary, refunds, etc.
 The fixed spends banner on the 1st also adds the salary as Money in.
 
-### Untracked jar
+### Untracked (live, never stored)
 
-Like Outside jars: not part of any limit, only lowers the month's plan.
+Money that left this month but no entry explains it. Worked out every time:
 
-While a month has Untracked money, the add sheet shows a small chip under the
-note: **Old spend? Take from Untracked**. It's off by default, so a spend lowers
-my balance. Tapped on, it means a past spend I just remembered: the amount moves
-out of Untracked into the jar I pick, and my balance stays the same. If it's
-bigger than what's left in Untracked, only the extra lowers the balance. This is
-mostly for the first month, so it stays small.
+  start of month (opening + salary) + money in/out this month − real balance at month end
 
-Untracked is not in the jar list. It is only made by the balance check.
+- Only the month of my balance check has it. Salary comes from settings unless a
+  Money in was recorded that month. The first check starts the month at 0.
+- Because it's live, the order doesn't matter: setting income after the balance,
+  or editing old entries, keeps it right.
+- When I remember an old spend, I add it and turn on **Untracked money (old spend)**
+  (only shown while there's Untracked money). It's saved on the spend and can be
+  changed later. A marked spend shrinks Untracked and never moves my balance.
+  Deleting it puts the money back. It can't be more than what's untracked.
+- A balance check in a new month saves the old month's Untracked as one stored
+  entry and starts the new month from the old balance.
+- Untracked is not in the jar list. Its page shows the amount and the marked spends.
+- Data from older versions (saved gap entries) is converted on load, keeping the balance.
+
+### First-run setup
+
+One question per screen, in the order the numbers depend on: name (optional),
+monthly income, jar split (6 jars defaults), fixed spends (skippable), money right
+now (skippable). Settings has the name and **Run setup again**.
 
 ### History tab
 

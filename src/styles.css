@@ -1372,3 +1372,74 @@ main {
     max-width: none;
   }
 }
+
+/* ---------- First-run setup ---------- */
+
+.onboard {
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) max(var(--gutter), env(safe-area-inset-right)) env(safe-area-inset-bottom) max(var(--gutter), env(safe-area-inset-left));
+}
+.onboard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+}
+.onboard-spacer {
+  width: 40px;
+}
+.dots {
+  display: flex;
+  gap: 6px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  transition: width 240ms var(--ease-out), background-color 200ms ease-out;
+}
+.dot.done {
+  background: color-mix(in srgb, var(--primary) 45%, var(--surface-3));
+}
+.dot.on {
+  width: 20px;
+  background: var(--primary);
+}
+.onboard-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0 20px;
+}
+.onboard-body .title {
+  margin-top: 8px;
+}
+.onboard-emoji {
+  margin-top: 12px;
+  font-size: 3rem;
+  line-height: 1;
+}
+.onboard-money input {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.onboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.detail-hint {
+  margin-top: 10px;
+}
+.setup-again {
+  margin-top: 28px;
+}

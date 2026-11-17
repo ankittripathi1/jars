@@ -1,5 +1,6 @@
 // Saves all app data as one JSON object in localStorage.
 import { useEffect, useState } from "react";
+import { migrateOldChecks } from "./money";
 import type { Data } from "./types";
 
 const KEY = "jars-data-v1";
@@ -61,8 +62,11 @@ export function parseData(raw: string): Data | null {
   const jar = (v: unknown) => (typeof v === "string" && JAR_IDS.has(v) ? (v as Data["spends"][number]["jar"]) : "untracked");
   const id = (v: unknown, i: number, prefix: string) => (typeof v === "string" && v ? v : `${prefix}-${i}`);
 
-  return {
+  const data: Data = {
     version: 1,
+    name: text(d.name).trim() || undefined,
+    // Older data without the flag: count as set up if it already has an income or entries.
+    onboarded: d.onboarded === true || (typeof s.income === "number" && s.income > 0) || list(d.spends).length > 0,
     settings: {
       income: typeof s.income === "number" && Number.isFinite(s.income) && s.income >= 0 ? s.income : 0,
       shares,
@@ -72,7 +76,14 @@ export function parseData(raw: string): Data | null {
     },
     spends: list(d.spends)
       .filter((x) => isAmount(x.amount) && isDate(x.date))
-      .map((x, i) => ({ id: id(x.id, i, "s"), amount: x.amount as number, jar: jar(x.jar), note: text(x.note), date: x.date as string })),
+      .map((x, i) => ({
+        id: id(x.id, i, "s"),
+        amount: x.amount as number,
+        jar: jar(x.jar),
+        note: text(x.note),
+        date: x.date as string,
+        ...(x.fromUntracked === true ? { fromUntracked: true } : {}),
+      })),
     incomes: list(d.incomes)
       .filter((x) => isAmount(x.amount) && isDate(x.date))
       .map((x, i) => ({ id: id(x.id, i, "i"), amount: x.amount as number, note: text(x.note), date: x.date as string })),
@@ -89,9 +100,12 @@ export function parseData(raw: string): Data | null {
     fixedAddedFor: Array.isArray(d.fixedAddedFor) ? d.fixedAddedFor.filter((m): m is string => typeof m === "string") : [],
     balanceStart: (() => {
       const b = d.balanceStart as Record<string, unknown> | undefined;
-      return b && isDate(b.date) && typeof b.amount === "number" && Number.isFinite(b.amount) ? { date: b.date, amount: b.amount } : undefined;
+      if (!b || !isDate(b.date) || typeof b.amount !== "number" || !Number.isFinite(b.amount)) return undefined;
+      const opening = typeof b.opening === "number" && Number.isFinite(b.opening) ? b.opening : 0;
+      return { date: b.date, amount: b.amount, opening };
     })(),
   };
+  return migrateOldChecks(data);
 }
 
 function load(): Data {

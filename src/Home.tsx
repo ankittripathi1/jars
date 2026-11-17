@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
-import { addMonths, balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth } from "./money";
+import { addMonths, balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
 import type { Data, JarId, Spend } from "./types";
 import { Icons, JAR_LOOK, JarIcon, Ring, stagger, useCountUp } from "./ui";
 
@@ -26,13 +26,16 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
   const shownRemaining = useCountUp(remaining);
   const fixedTotal = data.settings.fixed.reduce((s, f) => s + f.amount, 0);
   const [monthName, year] = monthLabel(month).split(" ");
-  const extras = EXTRA_JARS.map((j) => ({ ...j, spent: jarSpent(data, month, j.id) })).filter((j) => j.spent > 0);
+  // Untracked = stored entries (from older months) + this month's live amount.
+  const extras = EXTRA_JARS.map((j) => ({ ...j, spent: jarSpent(data, month, j.id) + (j.id === "untracked" ? untracked(data, month) : 0) })).filter(
+    (j) => j.spent > 0,
+  );
 
   return (
     <>
       <header className="page-head">
         <div>
-          <p className="eyebrow">{year}</p>
+          <p className="eyebrow">{data.name ? `Hi ${data.name} · ${year}` : year}</p>
           <h1 className="title">{monthName}</h1>
         </div>
         <div className="head-actions">
@@ -135,11 +138,11 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
             <JarIcon jar={j.id} size={40} />
             <span className="jar-row-text">
               <span className="jar-row-name">{j.name}</span>
-              <span className="jar-row-sub">Not part of any limit</span>
+              <span className="jar-row-sub">{j.id === "untracked" ? "Money gone, reason unknown" : "Not part of any limit"}</span>
             </span>
             <span className="jar-row-left">
               {rupees(j.spent)}
-              <small>spent</small>
+              <small>{j.id === "untracked" ? "untracked" : "spent"}</small>
             </span>
           </button>
         ))}
@@ -160,7 +163,8 @@ type JarDetailProps = {
 export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) {
   const list = spendsInMonth(data.spends, month)
     .map((s, i) => ({ s, i }))
-    .filter(({ s }) => s.jar === jar)
+    // The Untracked page also lists old spends marked "Untracked money": they explain part of it.
+    .filter(({ s }) => s.jar === jar || (jar === "untracked" && s.fromUntracked))
     .sort((a, b) => b.s.date.localeCompare(a.s.date) || b.i - a.i)
     .map(({ s }) => s);
   const summary = jarSummaries(data, month).find((j) => j.id === jar);
@@ -198,6 +202,17 @@ export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) 
               <div style={{ transform: `scaleX(${ratio})` }} />
             </div>
           </>
+        ) : jar === "untracked" ? (
+          <>
+            <div className="jar-top">
+              <span className="muted">Still untracked</span>
+              <b className={untracked(data, month) > 0 ? "neg" : ""}>{rupees(untracked(data, month) + jarSpent(data, month, "untracked"))}</b>
+            </div>
+            <p className="hint-text detail-hint">
+              Money that left but no entry explains it. When you remember a spend, add it and turn on "Untracked money (old spend)". It shows up
+              here and this number goes down.
+            </p>
+          </>
         ) : (
           <div className="jar-top">
             <span className="muted">Not part of any jar limit</span>
@@ -218,7 +233,10 @@ export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) 
                 .map((s) => (
                   <li key={s.id} className="enter" style={stagger(2 + row++)}>
                     <button onClick={() => onEdit(s)}>
-                      <span className="list-main">{s.note || "No note"}</span>
+                      <span className="list-main">
+                        {s.note || "No note"}
+                        {jar === "untracked" && s.jar !== "untracked" && <span className="muted small-text"> · {jarName(s.jar)}</span>}
+                      </span>
                       <span className="list-amount">{rupees(s.amount)}</span>
                     </button>
                   </li>

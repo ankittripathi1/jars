@@ -4,7 +4,8 @@ import { monthLabel, rupees } from "./format";
 import { Friends, FriendSheet } from "./Friends";
 import { History } from "./History";
 import { Home, JarDetail } from "./Home";
-import { addFixedSpends, addFromUntracked, jarName, jarSpent, monthOf, reconcile, redoMonthCheck, setBalance } from "./money";
+import { Onboarding } from "./Onboarding";
+import { addFixedSpends, jarName, monthOf, setBalance, untracked } from "./money";
 import { Settings } from "./Settings";
 import { SpendSheet } from "./SpendSheet";
 import { newId, today, useData } from "./store";
@@ -72,15 +73,15 @@ export function App() {
     showToast(text, undoable ? () => update(() => before) : undefined);
   }
 
-  function saveSpend(s: Omit<Spend, "id">, fromUntracked: boolean) {
-    if (fromUntracked) {
-      change((d) => addFromUntracked(d, { ...s, id: newId() }), `Moved ${rupees(s.amount)} from Untracked to ${jarName(s.jar)}`);
-      rememberJar(s.jar);
-    } else if (sheet?.mode === "edit") {
+  function saveSpend(s: Omit<Spend, "id">) {
+    if (sheet?.mode === "edit") {
       const id = sheet.item.id;
       change((d) => ({ ...d, spends: d.spends.map((x) => (x.id === id ? { ...s, id } : x)) }), "Saved");
     } else {
-      change((d) => ({ ...d, spends: [...d.spends, { ...s, id: newId() }] }), `Added ${rupees(s.amount)} to ${jarName(s.jar)}`);
+      change(
+        (d) => ({ ...d, spends: [...d.spends, { ...s, id: newId() }] }),
+        s.fromUntracked ? `Explained ${rupees(s.amount)} of Untracked` : `Added ${rupees(s.amount)} to ${jarName(s.jar)}`,
+      );
       rememberJar(s.jar);
     }
   }
@@ -118,6 +119,9 @@ export function App() {
   const barTitle =
     tab === "home" ? (openJar ? jarName(openJar) : monthLabel(month)) : tab === "history" ? `History · ${monthLabel(month)}` : tab === "friends" ? "Friends" : "Settings";
 
+  // First open: the setup asks things in the right order before the app shows.
+  if (!data.onboarded) return <Onboarding data={data} onDone={(d) => update(() => d)} />;
+
   return (
     <div className="app">
       <header className={scrolled ? "topbar on" : "topbar"} aria-hidden={!scrolled}>
@@ -153,6 +157,8 @@ export function App() {
           <Settings
             data={data}
             onSettings={(settings) => update((d) => ({ ...d, settings }))}
+            onName={(name) => update((d) => ({ ...d, name: name || undefined }))}
+            onRunSetup={() => update((d) => ({ ...d, onboarded: false }))}
             onRestore={(d) => change(() => d, "Backup restored")}
           />
         )}
@@ -219,13 +225,7 @@ export function App() {
       {sheet?.mode === "balance" && (
         <BalanceSheet
           data={data}
-          onSave={(actual, how) =>
-            change(
-              (d) =>
-                how === "redo" ? redoMonthCheck(d, actual, today(), newId) : how === "compare" ? reconcile(d, actual, today(), newId) : setBalance(d, actual, today()),
-              `Balance set to ${rupees(actual)}`,
-            )
-          }
+          onSave={(actual) => change((d) => setBalance(d, actual, today(), newId), `Balance set to ${rupees(actual)}`)}
           onClose={() => setSheet(null)}
         />
       )}
@@ -234,7 +234,7 @@ export function App() {
           spends={data.spends}
           editing={sheet.mode === "edit" ? (sheet.kind === "spend" ? { kind: "spend", item: sheet.item } : { kind: "income", item: sheet.item }) : undefined}
           defaultJar={openJar && openJar !== "untracked" ? openJar : lastJar}
-          untrackedLeft={(m) => jarSpent(data, m, "untracked")}
+          untrackedLeft={(m) => untracked(data, m)}
           onSaveSpend={saveSpend}
           onSaveIncome={saveIncome}
           onDelete={sheet.mode === "edit" ? deleteEditing : undefined}

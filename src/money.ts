@@ -67,109 +67,113 @@ export function jarSpent(data: Data, month: string, jar: JarId): number {
   return sum(spendsInMonth(data.spends, month).filter((s) => s.jar === jar));
 }
 
-/** Income minus every spend in the month, including Outside jars and Untracked. */
+/**
+ * What's left of this month's plan: income minus every spend, minus live Untracked money.
+ * Outside jars and stored Untracked entries count as spends.
+ */
 export function overallRemaining(data: Data, month: string): number {
-  return round2(data.settings.income - sum(spendsInMonth(data.spends, month)));
+  return round2(data.settings.income - sum(spendsInMonth(data.spends, month)) - untracked(data, month));
 }
 
-/** Money in minus money out for every entry dated on or after `date`. Friend money counts. */
-export function netSince(data: Data, date: string): number {
-  const after = <T extends { date: string }>(list: T[]) => list.filter((x) => x.date >= date);
-  const friends = after(data.friends);
-  return round2(
-    sum(after(data.incomes)) - sum(after(data.spends)) + sum(friends.filter((f) => f.type === "got")) - sum(friends.filter((f) => f.type === "gave")),
-  );
+/** Money in minus money out for entries dated in [from, to]. Friend money counts. */
+function net(data: Data, from: string, to: string, opts: { skipUntrackedSpends: boolean }): number {
+  const inRange = <T extends { date: string }>(list: T[]) => list.filter((x) => x.date >= from && x.date <= to);
+  const spends = inRange(data.spends).filter((s) => !(opts.skipUntrackedSpends && s.fromUntracked));
+  const friends = inRange(data.friends);
+  return round2(sum(inRange(data.incomes)) - sum(spends) + sum(friends.filter((f) => f.type === "got")) - sum(friends.filter((f) => f.type === "gave")));
 }
 
-/** Spendable money right now, or null if I never entered my real balance. */
+const END = "9999-12-31";
+const lastDay = (month: string) => `${month}-31`; // string compare: every real date in the month is <= "-31"
+
+/**
+ * Spendable money at the end of `to` (default: now), or null if I never entered my balance.
+ * Spends marked "Untracked money" are old spends that were already gone, so they never move it.
+ */
+export function balanceThrough(data: Data, to = END): number | null {
+  const b = data.balanceStart;
+  if (!b) return null;
+  return round2(b.amount + net(data, b.date, to, { skipUntrackedSpends: true }));
+}
+
 export function balance(data: Data): number | null {
-  if (!data.balanceStart) return null;
-  return round2(data.balanceStart.amount + netSince(data, data.balanceStart.date));
+  return balanceThrough(data);
 }
 
 /**
- * What the app thinks I should have now.
- * Before the first balance check it assumes the month started at zero plus salary.
- * (Salary counts once: either as a recorded income this month or from settings.)
+ * Untracked money in a month: money that left but no entry explains it. Worked out live, never stored,
+ * so changing income or adding entries in any order keeps it right.
+ *
+ * Only the month of my balance check has it:
+ *   start of month (opening + salary) + all money in/out this month − real balance at month end
+ * Spends marked "Untracked money" count as spends here, so each one shrinks it.
+ * Salary comes from settings unless a Money in entry was recorded that month.
  */
-export function expectedBalance(data: Data, today: string): number {
-  const known = balance(data);
-  if (known !== null) return known;
-  const month = monthOf(today);
+export function untracked(data: Data, month: string): number {
+  const b = data.balanceStart;
+  if (!b || monthOf(b.date) !== month) return 0;
   const salaryRecorded = data.incomes.some((i) => monthOf(i.date) === month);
-  return round2((salaryRecorded ? 0 : data.settings.income) + netSince(data, `${month}-01`));
+  const start = b.opening + (salaryRecorded ? 0 : data.settings.income);
+  const end = balanceThrough(data, lastDay(month)) ?? 0;
+  return Math.max(0, round2(start + net(data, `${month}-01`, lastDay(month), { skipUntrackedSpends: false }) - end));
 }
 
-/** Store my real balance so that balance(data) equals `actual` today. */
-export function setBalance(data: Data, actual: number, today: string): Data {
-  return { ...data, balanceStart: { date: today, amount: round2(actual - netSince(data, today)) } };
-}
-
-/**
- * Balance check: if I have less than expected, the gap becomes one Untracked spend.
- * If I have more, the extra becomes an untracked Money in. Then the balance is set.
- */
-export function reconcile(data: Data, actual: number, today: string, makeId: () => string): Data {
-  const gap = round2(expectedBalance(data, today) - actual);
-  let next = data;
-  if (gap > 0) {
-    next = { ...next, spends: [...next.spends, { id: makeId(), amount: gap, jar: "untracked", note: UNTRACKED_NOTE, date: today }] };
-  } else if (gap < 0) {
-    next = { ...next, incomes: [...next.incomes, { id: makeId(), amount: -gap, note: EXTRA_NOTE, date: today }] };
-  }
-  return setBalance(next, actual, today);
-}
-
-// Notes on the entries that reconcile() makes, so a redo can find and remove them.
+// Note on the entry that keeps an old month's Untracked money when a new month's check replaces it.
 export const UNTRACKED_NOTE = "Not sure where it went";
+// Note on entries made by older versions of the app (removed on load, see migrateOldChecks).
 export const EXTRA_NOTE = "Extra money found";
 
-/** This month's data as if I never ran a balance check: auto-made entries removed, balance cleared. */
-export function withoutMonthCheck(data: Data, today: string): Data {
+/**
+ * Store my real balance: balance(data) equals `actual` from now on.
+ * A check in a new month first keeps the old month's Untracked money as a stored entry,
+ * and starts the new month from the old balance (its "opening").
+ */
+export function setBalance(data: Data, actual: number, today: string, makeId: () => string): Data {
   const month = monthOf(today);
+  const old = data.balanceStart;
+  let next = data;
+  let opening = 0;
+
+  if (old && monthOf(old.date) === month) {
+    opening = old.opening;
+  } else if (old) {
+    const oldMonth = monthOf(old.date);
+    opening = balanceThrough(data, lastDay(addMonths(month, -1))) ?? 0;
+    const left = untracked(data, oldMonth);
+    if (left > 0) {
+      const lastDate = new Date(Number(oldMonth.slice(0, 4)), Number(oldMonth.slice(5)), 0).getDate();
+      const frozen: Spend = { id: makeId(), amount: left, jar: "untracked", note: UNTRACKED_NOTE, date: `${oldMonth}-${String(lastDate).padStart(2, "0")}` };
+      next = { ...next, spends: [...next.spends, frozen] };
+    }
+  }
+
+  const amount = round2(actual - net(next, today, END, { skipUntrackedSpends: true }));
+  return { ...next, balanceStart: { date: today, amount, opening } };
+}
+
+/**
+ * Older versions saved the balance-check gap as entries ("Not sure where it went" spends,
+ * "Extra money found" income) in the check's month. Untracked is live now, so remove them
+ * and keep the real balance the same.
+ */
+export function migrateOldChecks(data: Data): Data {
+  const b = data.balanceStart;
+  if (!b) return data;
+  const month = monthOf(b.date);
+  const isOldGap = (s: Spend) => s.jar === "untracked" && s.note === UNTRACKED_NOTE && monthOf(s.date) === month;
+  const isOldExtra = (i: Income) => i.note === EXTRA_NOTE && monthOf(i.date) === month;
+  const gaps = data.spends.filter(isOldGap);
+  const extras = data.incomes.filter(isOldExtra);
+  if (gaps.length === 0 && extras.length === 0) return data;
+  const inWindow = <T extends { date: string }>(x: T) => x.date >= b.date;
+  // Removing a spend raises net, removing income lowers it; shift the start so the balance stays.
+  const shift = sum(extras.filter(inWindow)) - sum(gaps.filter(inWindow));
   return {
     ...data,
-    spends: data.spends.filter((s) => !(s.jar === "untracked" && s.note === UNTRACKED_NOTE && monthOf(s.date) === month)),
-    incomes: data.incomes.filter((i) => !(i.note === EXTRA_NOTE && monthOf(i.date) === month)),
-    balanceStart: undefined,
+    spends: data.spends.filter((s) => !isOldGap(s)),
+    incomes: data.incomes.filter((i) => !isOldExtra(i)),
+    balanceStart: { ...b, amount: round2(b.amount + shift) },
   };
-}
-
-/**
- * Start this month's check over: forget earlier auto-made entries and the balance,
- * then compare my real money with salary − this month's tracked spends (like the first time).
- */
-export function redoMonthCheck(data: Data, actual: number, today: string, makeId: () => string): Data {
-  return reconcile(withoutMonthCheck(data, today), actual, today, makeId);
-}
-
-/**
- * Add a spend I just remembered that was part of the Untracked money.
- * Its amount comes out of that month's Untracked spends (newest first), so nothing is counted twice
- * and my balance stays the same. If it is bigger than what's left in Untracked, only the extra
- * lowers the balance.
- */
-export function addFromUntracked(data: Data, spend: Spend): Data {
-  const month = monthOf(spend.date);
-  const moved = Math.min(spend.amount, jarSpent(data, month, "untracked"));
-  const before = balance(data);
-
-  let toMove = moved;
-  const spends = [...data.spends];
-  for (let i = spends.length - 1; i >= 0 && toMove > 0; i--) {
-    const s = spends[i]!;
-    if (s.jar !== "untracked" || monthOf(s.date) !== month) continue;
-    const take = Math.min(s.amount, toMove);
-    toMove = round2(toMove - take);
-    spends[i] = { ...s, amount: round2(s.amount - take) };
-  }
-  const next: Data = { ...data, spends: [...spends.filter((s) => s.amount > 0), spend] };
-
-  // Dates of the moved money can fall before or after the balance day, so fix the balance directly.
-  if (before === null || !next.balanceStart) return next;
-  const target = round2(before - (spend.amount - moved));
-  const drift = round2(target - (balance(next) ?? target));
-  return { ...next, balanceStart: { ...next.balanceStart, amount: round2(next.balanceStart.amount + drift) } };
 }
 
 /**
