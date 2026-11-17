@@ -110,7 +110,9 @@ export function App() {
 
   const pageKey = `${tab}-${openJar ?? ""}-${month}`;
   // New page starts at the top, like a native app.
-  useEffect(() => window.scrollTo({ top: 0 }), [pageKey]);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [pageKey]);
 
   // Small title in the top bar once the big page title scrolls away.
   const barTitle =
