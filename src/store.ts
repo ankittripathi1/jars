@@ -31,15 +31,67 @@ export function today(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** Light shape check for loaded or restored data. Returns null if it doesn't look like ours. */
-export function parseData(text: string): Data | null {
+const JAR_IDS = new Set<string>(["necessities", "freedom", "longterm", "education", "play", "give", "outside", "untracked"]);
+const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+const isAmount = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v > 0;
+const text = (v: unknown) => (typeof v === "string" ? v : "");
+const list = (v: unknown): Record<string, unknown>[] => (Array.isArray(v) ? v.filter((x) => x && typeof x === "object") : []);
+
+/**
+ * Reads saved or restored data. Returns null if it isn't ours.
+ * Broken entries (bad amount or date) are dropped and missing fields get defaults,
+ * so one bad row can never crash a screen.
+ */
+export function parseData(raw: string): Data | null {
+  let d: Record<string, unknown>;
   try {
-    const d = JSON.parse(text) as Partial<Data>;
-    if (d.version !== 1 || !d.settings || !Array.isArray(d.spends) || !Array.isArray(d.friends)) return null;
-    return { ...defaultData(), ...d } as Data;
+    d = JSON.parse(raw);
   } catch {
     return null;
   }
+  if (!d || d.version !== 1 || typeof d.settings !== "object" || d.settings === null) return null;
+
+  const base = defaultData();
+  const s = d.settings as Record<string, unknown>;
+  const shares = { ...base.settings.shares };
+  for (const k of Object.keys(shares) as (keyof typeof shares)[]) {
+    const v = (s.shares as Record<string, unknown> | undefined)?.[k];
+    if (typeof v === "number" && Number.isFinite(v) && v >= 0) shares[k] = v;
+  }
+  const jar = (v: unknown) => (typeof v === "string" && JAR_IDS.has(v) ? (v as Data["spends"][number]["jar"]) : "untracked");
+  const id = (v: unknown, i: number, prefix: string) => (typeof v === "string" && v ? v : `${prefix}-${i}`);
+
+  return {
+    version: 1,
+    settings: {
+      income: typeof s.income === "number" && Number.isFinite(s.income) && s.income >= 0 ? s.income : 0,
+      shares,
+      fixed: list(s.fixed)
+        .filter((f) => typeof f.amount === "number" && Number.isFinite(f.amount) && f.amount >= 0)
+        .map((f) => ({ name: text(f.name), amount: f.amount as number, jar: jar(f.jar) })),
+    },
+    spends: list(d.spends)
+      .filter((x) => isAmount(x.amount) && isDate(x.date))
+      .map((x, i) => ({ id: id(x.id, i, "s"), amount: x.amount as number, jar: jar(x.jar), note: text(x.note), date: x.date as string })),
+    incomes: list(d.incomes)
+      .filter((x) => isAmount(x.amount) && isDate(x.date))
+      .map((x, i) => ({ id: id(x.id, i, "i"), amount: x.amount as number, note: text(x.note), date: x.date as string })),
+    friends: list(d.friends)
+      .filter((x) => isAmount(x.amount) && isDate(x.date))
+      .map((x, i) => ({
+        id: id(x.id, i, "f"),
+        person: text(x.person).trim() || "Someone",
+        amount: x.amount as number,
+        type: x.type === "got" ? "got" : "gave",
+        note: text(x.note),
+        date: x.date as string,
+      })),
+    fixedAddedFor: Array.isArray(d.fixedAddedFor) ? d.fixedAddedFor.filter((m): m is string => typeof m === "string") : [],
+    balanceStart: (() => {
+      const b = d.balanceStart as Record<string, unknown> | undefined;
+      return b && isDate(b.date) && typeof b.amount === "number" && Number.isFinite(b.amount) ? { date: b.date, amount: b.amount } : undefined;
+    })(),
+  };
 }
 
 function load(): Data {

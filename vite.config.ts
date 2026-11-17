@@ -14,8 +14,8 @@ export default defineConfig({
         name: "Jars",
         short_name: "Jars",
         description: "Track money with the 6 jars system.",
-        theme_color: "#1b447a",
-        background_color: "#0f1114",
+        theme_color: "#ffffff",
+        background_color: "#ffffff",
         display: "standalone",
         icons: [
           { src: "pwa-64x64.png", sizes: "64x64", type: "image/png" },

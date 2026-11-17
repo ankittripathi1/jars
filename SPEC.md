@@ -204,6 +204,13 @@ Tap a spend or money in to edit it.
 
 ## Look and feel
 
+- Theme "Clean mint": white background, lots of white space, flat soft-gray cards
+  (no shadows), one green accent (#0E7C66) for money and actions, red only for
+  over/owed. Dark mode follows the phone.
+- Bottom nav is solid (no see-through blur): Jars, History, **+** in the middle,
+  Friends, Settings. Friends has its own "+ Add" in the header.
+- If a screen ever crashes, the app shows the error and a Reload button instead of
+  a blank page. Saved data is cleaned on load, so one broken row can't crash it.
 - Mobile first: works from 320px phones up. Text and big numbers scale with the screen.
 - Safe areas for notches and the home bar. Inputs are 16px+ so iOS never zooms.
 - Jars show as 2-column tiles with a ring per jar (1 column on very small phones).

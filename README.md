@@ -25,4 +25,4 @@ app works, but it can't be installed.
 - `src/Home.tsx`, `src/Friends.tsx`, `src/Settings.tsx`: the screens.
 - `src/Sheet.tsx`: bottom sheet (drag down to close, exit animation).
 - `src/ui.tsx`: jar colors and icons, nav icons, count-up numbers.
-- `src/styles.css`: theme (Cashew's palette: accent `#1B447A`, Material You surfaces), spacing, motion.
+- `src/styles.css`: theme ("Clean mint": white space, flat surfaces, green accent `#0E7C66`), spacing, motion.

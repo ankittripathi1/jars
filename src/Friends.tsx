@@ -43,9 +43,10 @@ export function Friends({ entries, onChange, toast }: Props) {
     />
   );
 
-  const fab = (
-    <button className="fab" onClick={() => setOpen("add")} aria-label="Add friend money">
+  const addButton = (
+    <button className="pill-btn" onClick={() => setOpen("add")} aria-label="Add friend money">
       {Icons.plus}
+      <span>Add</span>
     </button>
   );
 
@@ -62,6 +63,7 @@ export function Friends({ entries, onChange, toast }: Props) {
           <button className="icon-btn tonal" onClick={() => setPerson(null)} aria-label="Back">
             {Icons.back}
           </button>
+          {addButton}
         </header>
         <div className="detail-head enter" style={stagger(0)}>
           <Avatar name={person} />
@@ -91,7 +93,6 @@ export function Friends({ entries, onChange, toast }: Props) {
           ))}
         </ul>
         {history.length === 0 && <p className="empty">No entries left.</p>}
-        {fab}
         {sheet}
       </>
     );
@@ -101,6 +102,7 @@ export function Friends({ entries, onChange, toast }: Props) {
     <>
       <header className="page-head">
         <h1 className="title">Friends</h1>
+        {addButton}
       </header>
       {balances.length === 0 ? (
         <div className="empty enter">
@@ -125,7 +127,6 @@ export function Friends({ entries, onChange, toast }: Props) {
           ))}
         </ul>
       )}
-      {fab}
       {sheet}
     </>
   );

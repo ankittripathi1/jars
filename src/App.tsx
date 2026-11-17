@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { BalanceSheet } from "./BalanceSheet";
 import { monthLabel, rupees } from "./format";
 import { Friends, FriendSheet } from "./Friends";
@@ -156,12 +156,6 @@ export function App() {
         )}
       </main>
 
-      {(tab === "home" || tab === "history") && (
-        <button className="fab" onClick={() => setSheet({ mode: "add" })} aria-label="Add">
-          {Icons.plus}
-        </button>
-      )}
-
       {toast && (
         <div className="toast" key={toast.id} role="status">
           <span>{toast.text}</span>
@@ -178,23 +172,29 @@ export function App() {
         </div>
       )}
 
-      <nav className="tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={tab === t.id ? "tab on" : "tab"}
-            aria-current={tab === t.id ? "page" : undefined}
-            onClick={() => {
-              if (tab === t.id && !openJar) return;
-              go("none", () => {
-                setTab(t.id);
-                setOpenJar(null);
-              });
-            }}
-          >
-            <span className="tab-pill">{t.icon}</span>
-            <span className="tab-label">{t.label}</span>
-          </button>
+      <nav className="tabs" aria-label="Main">
+        {TABS.map((t, i) => (
+          <Fragment key={t.id}>
+            {i === 2 && (
+              <button className="nav-add" onClick={() => setSheet({ mode: "add" })} aria-label="Add spend or money in">
+                {Icons.plus}
+              </button>
+            )}
+            <button
+              className={tab === t.id ? "tab on" : "tab"}
+              aria-current={tab === t.id ? "page" : undefined}
+              onClick={() => {
+                if (tab === t.id && !openJar) return;
+                go("none", () => {
+                  setTab(t.id);
+                  setOpenJar(null);
+                });
+              }}
+            >
+              <span className="tab-pill">{t.icon}</span>
+              <span className="tab-label">{t.label}</span>
+            </button>
+          </Fragment>
         ))}
       </nav>
 

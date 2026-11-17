@@ -1,58 +1,57 @@
 /*
  * Jars UI. Mobile first, works from 320px phones up to tablets (content caps at 560px).
  *
- * Colors: Cashew's defaults (github.com/jameskokoska/Cashew): accent #1B447A with
- * Material You tonal surfaces, green for money in, red for over/owed.
- * Spacing: 4px grid, 16px side gutters. Touch targets: 44px or more.
- * Radii: 28 hero/sheet, 22 cards/tiles, 14 controls, 99 pills.
+ * Theme "Clean mint": white space first, flat soft-gray surfaces (no shadows),
+ * one calm green accent for money and actions, red only for over/owed.
+ * Spacing: 4px grid, 20px side gutters. Touch targets: 44px or more.
+ * Radii: 28 hero/sheet, 24 cards/tiles, 14 controls, 99 pills.
  * Motion: ease-out for things entering, drawer curve for sheets, UI motion under 300ms,
  * exits faster than enters. Reduced motion keeps fades, drops movement.
  */
 :root {
-  --bg: #fbfcff;
-  --surface: #f0f3f8;
-  --surface-2: #e3e8f0;
-  --surface-3: #d4dbe6;
-  --text: #191c20;
-  --muted: #5b636e;
-  --line: #dfe4eb;
-  --primary: #1b447a;
+  --bg: #ffffff;
+  --surface: #f5f6f8;
+  --surface-2: #eceef2;
+  --surface-3: #dfe3e9;
+  --text: #101418;
+  --muted: #677080;
+  --line: #eceef2;
+  --primary: #0e7c66;
   --on-primary: #ffffff;
-  --primary-container: #d6e3ff;
-  --on-primary-container: #001b3d;
-  --pos: #3a8a2f;
-  --neg: #c24f4f;
+  --primary-container: #e3f4ee;
+  --on-primary-container: #053a2f;
+  --pos: #16855a;
+  --neg: #d14343;
   --untracked: #a0786a;
-  --scrim: rgb(10 18 30 / 0.42);
-  --shadow: 0 1px 2px rgb(16 30 54 / 0.05), 0 2px 10px rgb(16 30 54 / 0.04);
+  --scrim: rgb(16 20 24 / 0.38);
+  --shadow: none;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
 
-  --gutter: 16px;
-  --nav-h: calc(72px + env(safe-area-inset-bottom));
+  --gutter: 20px;
+  --nav-h: calc(68px + env(safe-area-inset-bottom));
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1114;
-    --surface: #1a1d22;
-    --surface-2: #252a31;
-    --surface-3: #323843;
-    --text: #e3e5ea;
-    --muted: #9aa2ad;
-    --line: #2a2f37;
-    --primary: #a8c8ff;
-    --on-primary: #00315f;
-    --primary-container: #1b447a;
-    --on-primary-container: #d6e3ff;
-    --pos: #62ca77;
-    --neg: #e07a7a;
+    --bg: #0b0d10;
+    --surface: #15181c;
+    --surface-2: #1f2328;
+    --surface-3: #2b3036;
+    --text: #eceef1;
+    --muted: #8f97a3;
+    --line: #1f2328;
+    --primary: #4fd1ae;
+    --on-primary: #00382c;
+    --primary-container: #103b31;
+    --on-primary-container: #c9f2e5;
+    --pos: #5bd48f;
+    --neg: #f07171;
     --untracked: #c49a8b;
     --scrim: rgb(0 0 0 / 0.6);
-    --shadow: none;
     color-scheme: dark;
   }
 }
@@ -148,7 +147,7 @@ dl {
 }
 
 main {
-  padding: calc(env(safe-area-inset-top) + 20px) max(var(--gutter), env(safe-area-inset-right)) calc(var(--nav-h) + 104px)
+  padding: calc(env(safe-area-inset-top) + 28px) max(var(--gutter), env(safe-area-inset-right)) calc(var(--nav-h) + 40px)
     max(var(--gutter), env(safe-area-inset-left));
 }
 
@@ -240,7 +239,6 @@ main {
 @media (prefers-reduced-motion: reduce) {
   .page,
   .enter,
-  .fab,
   .toast,
   .entry-hero .jar-icon,
   .backdrop {
@@ -279,9 +277,7 @@ main {
   justify-content: center;
   height: calc(env(safe-area-inset-top) + 48px);
   padding: env(safe-area-inset-top) 72px 0;
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--bg);
   box-shadow: 0 1px 0 transparent;
   opacity: 0;
   transform: translateY(-6px);
@@ -309,7 +305,7 @@ main {
   justify-content: space-between;
   gap: 12px;
   min-height: 48px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 .title {
   font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.15rem);
@@ -330,7 +326,7 @@ main {
   gap: 8px;
 }
 .section-title {
-  margin: 28px 4px 12px;
+  margin: 36px 4px 14px;
   font-size: 1.05rem;
   font-weight: 700;
 }
@@ -364,7 +360,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 20px 22px 22px;
+  padding: 22px 24px 24px;
   border-radius: 28px;
   background: var(--primary-container);
   color: var(--on-primary-container);
@@ -462,7 +458,7 @@ main {
   gap: 12px;
   margin-top: 12px;
   padding: 14px 16px;
-  border-radius: 22px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -483,7 +479,7 @@ main {
 .tiles {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 148px), 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 .tile {
   display: flex;
@@ -491,10 +487,9 @@ main {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: 16px;
-  border-radius: 22px;
+  padding: 18px;
+  border-radius: 24px;
   background: var(--surface);
-  box-shadow: var(--shadow);
   text-align: left;
   transition: transform 140ms var(--ease-out), background-color 140ms ease-out;
 }
@@ -594,7 +589,7 @@ main {
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border-radius: 22px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: var(--shadow);
   text-align: left;
@@ -681,8 +676,8 @@ main {
   min-width: 0;
 }
 .card {
-  padding: 18px;
-  border-radius: 22px;
+  padding: 20px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -693,7 +688,7 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin: 24px 4px 8px;
+  margin: 28px 4px 10px;
   font-size: 0.86rem;
   font-weight: 650;
   color: var(--muted);
@@ -706,7 +701,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  border-radius: 22px;
+  border-radius: 24px;
   overflow: hidden;
 }
 .list li > button {
@@ -714,8 +709,8 @@ main {
   align-items: center;
   gap: 14px;
   width: 100%;
-  min-height: 64px;
-  padding: 12px 16px;
+  min-height: 68px;
+  padding: 12px 18px;
   background: var(--surface);
   text-align: left;
   transition: background-color 120ms ease-out;
@@ -776,7 +771,7 @@ main {
   flex-direction: column;
   gap: 2px;
   padding: 16px;
-  border-radius: 22px;
+  border-radius: 24px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -817,37 +812,7 @@ main {
   transform: scale(0.97);
 }
 
-.fab {
-  position: fixed;
-  z-index: 5;
-  right: max(16px, calc(50% - 264px), env(safe-area-inset-right));
-  bottom: calc(var(--nav-h) + 16px);
-  display: grid;
-  place-items: center;
-  width: 60px;
-  height: 60px;
-  border-radius: 20px;
-  background: var(--primary);
-  color: var(--on-primary);
-  box-shadow: 0 4px 10px rgb(0 0 0 / 0.14), 0 10px 24px rgb(0 0 0 / 0.12);
-  animation: fab-in 260ms var(--ease-out) backwards 80ms;
-  transition: transform 140ms var(--ease-out);
-}
-.fab svg {
-  width: 28px;
-  height: 28px;
-}
-.fab:active {
-  transform: scale(0.92);
-}
-@keyframes fab-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(8px);
-  }
-}
-
-/* Material 3 style bottom nav with a pill behind the active icon. */
+/* Bottom nav: solid, with the add button in the middle. */
 .tabs {
   position: fixed;
   z-index: 6;
@@ -855,45 +820,111 @@ main {
   right: 0;
   bottom: 0;
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 2px;
   height: var(--nav-h);
-  padding: 8px 4px env(safe-area-inset-bottom);
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  padding: 0 max(8px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(8px, env(safe-area-inset-left));
+  background: var(--bg);
   box-shadow: 0 -1px 0 var(--line);
 }
 .tab {
   display: flex;
   flex: 1;
-  max-width: 128px;
+  max-width: 104px;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 0;
+  gap: 3px;
+  padding: 6px 0;
   color: var(--muted);
+  transition: color 160ms ease-out;
 }
 .tab-pill {
   display: grid;
   place-items: center;
-  width: 60px;
-  height: 32px;
+  width: 56px;
+  height: 30px;
   border-radius: 99px;
   transition: background-color 200ms var(--ease-out), transform 140ms var(--ease-out);
 }
+.tab-pill svg {
+  width: 22px;
+  height: 22px;
+}
 .tab-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 650;
 }
 .tab.on {
-  color: var(--text);
+  color: var(--primary);
 }
 .tab.on .tab-pill {
   background: var(--primary-container);
-  color: var(--on-primary-container);
 }
 .tab:active .tab-pill {
   transform: scale(0.92);
+}
+.nav-add {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 6px;
+  border-radius: 18px;
+  background: var(--primary);
+  color: var(--on-primary);
+  transition: transform 140ms var(--ease-out);
+}
+.nav-add svg {
+  width: 26px;
+  height: 26px;
+}
+.nav-add:active {
+  transform: scale(0.92);
+}
+
+/* Small pill button, like "+ Add" in page headers. */
+.pill-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px 0 12px;
+  border-radius: 99px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: transform 140ms var(--ease-out);
+}
+.pill-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.pill-btn:active {
+  transform: scale(0.95);
+}
+
+/* Shown instead of a blank page if a screen crashes. */
+.crash {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 64px) var(--gutter) 40px;
+}
+.crash pre {
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* Snackbar, sits above the nav and FAB. */
@@ -902,7 +933,7 @@ main {
   z-index: 20;
   left: max(16px, env(safe-area-inset-left));
   right: max(16px, env(safe-area-inset-right));
-  bottom: calc(var(--nav-h) + 88px);
+  bottom: calc(var(--nav-h) + 16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
