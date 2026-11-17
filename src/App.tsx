@@ -4,7 +4,7 @@ import { monthLabel, rupees } from "./format";
 import { Friends, FriendSheet } from "./Friends";
 import { History } from "./History";
 import { Home, JarDetail } from "./Home";
-import { addFixedSpends, addFromUntracked, jarName, jarSpent, monthOf, reconcile, setBalance } from "./money";
+import { addFixedSpends, addFromUntracked, jarName, jarSpent, monthOf, reconcile, redoMonthCheck, setBalance } from "./money";
 import { Settings } from "./Settings";
 import { SpendSheet } from "./SpendSheet";
 import { newId, today, useData } from "./store";
@@ -219,8 +219,12 @@ export function App() {
       {sheet?.mode === "balance" && (
         <BalanceSheet
           data={data}
-          onSave={(actual, fillGap) =>
-            change((d) => (fillGap ? reconcile(d, actual, today(), newId) : setBalance(d, actual, today())), `Balance set to ${rupees(actual)}`)
+          onSave={(actual, how) =>
+            change(
+              (d) =>
+                how === "redo" ? redoMonthCheck(d, actual, today(), newId) : how === "compare" ? reconcile(d, actual, today(), newId) : setBalance(d, actual, today()),
+              `Balance set to ${rupees(actual)}`,
+            )
           }
           onClose={() => setSheet(null)}
         />

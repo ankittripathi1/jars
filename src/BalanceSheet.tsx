@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { cleanAmountInput, parseAmount, rupees } from "./format";
-import { balance, expectedBalance } from "./money";
+import { balance, expectedBalance, withoutMonthCheck } from "./money";
 import { Sheet } from "./Sheet";
 import { today } from "./store";
 import type { Data } from "./types";
 
 type Props = {
   data: Data;
-  // fillGap: true = turn the difference into an Untracked entry. false = just set the balance.
-  onSave: (actual: number, fillGap: boolean) => void;
+  // how: "set" = just set the number. "compare" = the gap becomes Untracked (or Money in).
+  // "redo" = start this month's check over (salary − tracked), replacing earlier auto entries.
+  onSave: (actual: number, how: "set" | "compare" | "redo") => void;
   onClose: () => void;
 };
 
@@ -25,9 +26,10 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
   const firstTime = current === null;
   const [mode, setMode] = useState<Mode>(firstTime ? "compare" : "fix");
   const [amount, setAmount] = useState(mode === "fix" && current !== null ? String(current) : "");
+  const [redo, setRedo] = useState(false);
 
   const actual = /^0+(\.0*)?$/.test(amount) ? 0 : parseAmount(amount);
-  const expected = expectedBalance(data, today());
+  const expected = redo ? expectedBalance(withoutMonthCheck(data, today()), today()) : expectedBalance(data, today());
   const gap = actual === null ? 0 : Math.round((expected - actual) * 100) / 100;
 
   function switchMode(m: Mode) {
@@ -43,7 +45,7 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
           onSubmit={(e) => {
             e.preventDefault();
             if (actual === null) return;
-            onSave(actual, mode === "compare");
+            onSave(actual, mode === "fix" ? "set" : redo ? "redo" : "compare");
             close();
           }}
         >
@@ -82,9 +84,21 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
 
           {mode === "compare" && (
             <>
+              {!firstTime && (
+                <div className="from-untracked">
+                  <button type="button" role="switch" aria-checked={redo} className={redo ? "mini-chip on" : "mini-chip"} onClick={() => setRedo(!redo)}>
+                    {redo ? "✓ Start this month over" : "Start this month over"}
+                  </button>
+                  {redo && (
+                    <span className="muted small-text">
+                      Compares with salary − this month's spends, like the first time. Earlier auto entries (Untracked, Extra money) are replaced.
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="card compare">
                 <div className="compare-row">
-                  <span className="muted">{firstTime ? "Expected (salary − tracked this month)" : "App expected"}</span>
+                  <span className="muted">{firstTime || redo ? "Expected (salary − tracked this month)" : "App expected"}</span>
                   <b>{rupees(expected)}</b>
                 </div>
                 {actual !== null && (
@@ -110,7 +124,7 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
               type="button"
               className="secondary"
               onClick={() => {
-                onSave(actual, false);
+                onSave(actual, "set");
                 close();
               }}
             >

@@ -174,6 +174,9 @@ Focused unit tests (Vitest) for the money logic only:
 - Later: tap **Edit** (or the big number). Two choices:
   - **Fix the number**: the current balance is filled in. Change it, nothing else is added.
   - **Compare with bank**: type what the bank shows. The gap becomes Untracked (or Money in).
+    A small **Start this month over** chip compares with salary − this month's
+    spends instead (like the first time) and replaces earlier auto entries. Use it
+    if the balance was set before the income, or the gap was skipped.
 - Balance = balance I entered + money in − spends + friend "got" − friend "gave",
   for every entry dated on or after the day I entered it.
 - "This month's plan" (income − spends this month) stays under it.

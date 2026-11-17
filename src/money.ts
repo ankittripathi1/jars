@@ -113,11 +113,34 @@ export function reconcile(data: Data, actual: number, today: string, makeId: () 
   const gap = round2(expectedBalance(data, today) - actual);
   let next = data;
   if (gap > 0) {
-    next = { ...next, spends: [...next.spends, { id: makeId(), amount: gap, jar: "untracked", note: "Not sure where it went", date: today }] };
+    next = { ...next, spends: [...next.spends, { id: makeId(), amount: gap, jar: "untracked", note: UNTRACKED_NOTE, date: today }] };
   } else if (gap < 0) {
-    next = { ...next, incomes: [...next.incomes, { id: makeId(), amount: -gap, note: "Extra money found", date: today }] };
+    next = { ...next, incomes: [...next.incomes, { id: makeId(), amount: -gap, note: EXTRA_NOTE, date: today }] };
   }
   return setBalance(next, actual, today);
+}
+
+// Notes on the entries that reconcile() makes, so a redo can find and remove them.
+export const UNTRACKED_NOTE = "Not sure where it went";
+export const EXTRA_NOTE = "Extra money found";
+
+/** This month's data as if I never ran a balance check: auto-made entries removed, balance cleared. */
+export function withoutMonthCheck(data: Data, today: string): Data {
+  const month = monthOf(today);
+  return {
+    ...data,
+    spends: data.spends.filter((s) => !(s.jar === "untracked" && s.note === UNTRACKED_NOTE && monthOf(s.date) === month)),
+    incomes: data.incomes.filter((i) => !(i.note === EXTRA_NOTE && monthOf(i.date) === month)),
+    balanceStart: undefined,
+  };
+}
+
+/**
+ * Start this month's check over: forget earlier auto-made entries and the balance,
+ * then compare my real money with salary − this month's tracked spends (like the first time).
+ */
+export function redoMonthCheck(data: Data, actual: number, today: string, makeId: () => string): Data {
+  return reconcile(withoutMonthCheck(data, today), actual, today, makeId);
 }
 
 /**

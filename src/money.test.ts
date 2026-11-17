@@ -11,6 +11,7 @@ import {
   overallRemaining,
   reconcile,
   recentNotes,
+  redoMonthCheck,
   setBalance,
 } from "./money";
 import { defaultData } from "./store";
@@ -202,5 +203,28 @@ describe("paise", () => {
       { amount: 0.2, jar: "play", note: "b", date: "2026-11-02" },
     ]);
     expect(jarSpent(data, "2026-11", "play")).toBe(0.3);
+  });
+});
+
+describe("redoMonthCheck", () => {
+  it("fixes a balance set before income: drops the wrong Extra money and finds the Untracked", () => {
+    // Balance 8,000 was set while income was 0, so 28,000 "extra money" was added by mistake.
+    const tracked = withSpends([{ amount: 20000, jar: "necessities", note: "rent", date: "2026-11-01" }]);
+    const noIncome = { ...tracked, settings: { ...tracked.settings, income: 0 } };
+    const wrong = reconcile(noIncome, 8000, "2026-11-17", id);
+    expect(wrong.incomes.at(-1)).toMatchObject({ amount: 28000 });
+
+    // Income is now 50,000. Redo: 50,000 − 20,000 tracked = 30,000 expected, I have 8,000.
+    const fixed = redoMonthCheck({ ...wrong, settings: { ...wrong.settings, income: 50000 } }, 8000, "2026-11-18", id);
+    expect(fixed.incomes).toEqual([]);
+    expect(jarSpent(fixed, "2026-11", "untracked")).toBe(22000);
+    expect(balance(fixed)).toBe(8000);
+  });
+
+  it("replaces an earlier Untracked entry instead of adding a second one", () => {
+    const first = reconcile(withSpends([{ amount: 20000, jar: "necessities", note: "rent", date: "2026-11-01" }]), 12000, "2026-11-17", id);
+    const again = redoMonthCheck(first, 10000, "2026-11-17", id);
+    expect(again.spends.filter((s) => s.jar === "untracked")).toHaveLength(1);
+    expect(jarSpent(again, "2026-11", "untracked")).toBe(20000);
   });
 });
