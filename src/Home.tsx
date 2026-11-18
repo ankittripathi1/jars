@@ -3,7 +3,7 @@ import { dayLabel, monthLabel, rupees } from "./format";
 import { balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
 import { MonthHead } from "./MonthHead";
 import type { Data, JarId, Spend } from "./types";
-import { Icons, JAR_LOOK, JarIcon, Ring, stagger, useCountUp } from "./ui";
+import { CountUp, Icons, JAR_LOOK, JarIcon, Ring, stagger } from "./ui";
 
 type HomeProps = {
   data: Data;
@@ -23,8 +23,6 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
   const income = data.settings.income;
   const spent = income - remaining;
   const money = balance(data);
-  const shownMoney = useCountUp(money ?? 0);
-  const shownRemaining = useCountUp(remaining);
   const fixedTotal = data.settings.fixed.reduce((s, f) => s + f.amount, 0);
   const year = monthLabel(month).split(" ")[1];
   // Untracked = stored entries (from older months) + this month's live amount.
@@ -47,7 +45,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
         </div>
         {money !== null ? (
           <button className="hero-num-btn" onClick={onEditBalance} aria-label={`Money left ${rupees(money)}. Edit balance`}>
-            <strong className={money < 0 ? "hero-num neg" : "hero-num"}>{rupees(shownMoney)}</strong>
+            <strong className={money < 0 ? "hero-num neg" : "hero-num"}><CountUp value={money} /></strong>
           </button>
         ) : (
           <div className="hero-setup">
@@ -62,7 +60,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
           <div className="hero-foot">
             <span>This month's plan</span>
             <span className={remaining < 0 ? "neg" : ""}>
-              {rupees(shownRemaining)} <span className="hero-of">of {rupees(income)}</span>
+              <CountUp value={remaining} /> <span className="hero-of">of {rupees(income)}</span>
             </span>
           </div>
           <div className="bar hero-bar">

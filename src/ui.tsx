@@ -1,5 +1,6 @@
 // Small shared UI pieces: jar colors and icons, nav icons, animated numbers.
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { rupees } from "./format";
 import type { JarId } from "./types";
 
 /** Color and emoji per jar. Colors are tuned to read on light and dark surfaces. */
@@ -76,16 +77,23 @@ export const Icons = {
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-/** Animates from the old value to the new one (ease-out, ~450ms). Shows that a money number changed. */
-export function useCountUp(value: number, ms = 450): number {
-  const [shown, setShown] = useState(value);
+/**
+ * Money number that animates from its old value to the new one (ease-out, ~450ms).
+ * It writes the text straight to the DOM, so the screen around it does not re-render each frame.
+ * React never owns the text inside the span; only this effect sets it.
+ */
+export function CountUp({ value, ms = 450 }: { value: number; ms?: number }) {
+  const el = useRef<HTMLSpanElement>(null);
   const from = useRef(value);
 
-  useEffect(() => {
+  // Layout effect so the first number is there before paint.
+  useLayoutEffect(() => {
+    const node = el.current;
+    if (!node) return;
     const start = from.current;
     if (start === value || reducedMotion()) {
       from.current = value;
-      setShown(value);
+      node.textContent = rupees(value);
       return;
     }
     const t0 = performance.now();
@@ -95,14 +103,14 @@ export function useCountUp(value: number, ms = 450): number {
       const eased = 1 - Math.pow(1 - p, 3);
       const v = p < 1 ? Math.round(start + (value - start) * eased) : value;
       from.current = v;
-      setShown(v);
+      node.textContent = rupees(v);
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [value, ms]);
 
-  return shown;
+  return <span ref={el} />;
 }
 
 /** Stagger index for list enter animations: style={stagger(i)}. */
