@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
 import { balance, EXTRA_JARS, groupByDay, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
 import { MonthHead } from "./MonthHead";
@@ -16,7 +16,17 @@ type HomeProps = {
   onEditBalance: () => void;
 };
 
-/** Month overview: real money left, this month's plan, then one card per jar. */
+const HIDE_KEY = "jars-hide-amounts";
+
+function loadHidden(): boolean {
+  try {
+    return localStorage.getItem(HIDE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Month overview: real money left, this month's plan, then one card per jar. The eye button hides every amount here. */
 export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFixed, onEditBalance }: HomeProps) {
   // Only when the data or month changes, not on every App render (a toast, a sheet opening).
   const { jars, remaining, money, extras } = useMemo(
@@ -35,6 +45,18 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
   const spent = income - remaining;
   const fixedTotal = data.settings.fixed.reduce((s, f) => s + f.amount, 0);
   const year = monthLabel(month).split(" ")[1];
+  const [hidden, setHidden] = useState(loadHidden);
+  // Every amount on this screen goes through this, so hiding covers all of them.
+  const show = (n: number) => (hidden ? "₹••••" : rupees(n));
+
+  function toggleHidden() {
+    setHidden(!hidden);
+    try {
+      localStorage.setItem(HIDE_KEY, hidden ? "0" : "1");
+    } catch {
+      // Still hidden for this session.
+    }
+  }
 
   return (
     <>
@@ -43,15 +65,20 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
       <section className="hero enter" style={stagger(0)}>
         <div className="hero-row">
           <span className="hero-label">Money left now</span>
-          {money !== null && (
-            <button className="hero-chip" onClick={onEditBalance}>
-              Edit
+          <span className="hero-actions">
+            <button className="icon-btn hero-eye" onClick={toggleHidden} aria-pressed={hidden} aria-label={hidden ? "Show amounts" : "Hide amounts"}>
+              {hidden ? Icons.eyeOff : Icons.eye}
             </button>
-          )}
+            {money !== null && (
+              <button className="hero-chip" onClick={onEditBalance}>
+                Edit
+              </button>
+            )}
+          </span>
         </div>
         {money !== null ? (
-          <button className="hero-num-btn" onClick={onEditBalance} aria-label={`Money left ${rupees(money)}. Edit balance`}>
-            <strong className={money < 0 ? "hero-num neg" : "hero-num"}><CountUp value={money} /></strong>
+          <button className="hero-num-btn" onClick={onEditBalance} aria-label={`Money left ${hidden ? "hidden" : rupees(money)}. Edit balance`}>
+            <strong className={money < 0 && !hidden ? "hero-num neg" : "hero-num"}>{hidden ? show(money) : <CountUp value={money} />}</strong>
           </button>
         ) : (
           <div className="hero-setup">
@@ -63,12 +90,20 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
         )}
 
         <div className="hero-month">
-          <div className="hero-foot">
-            <span>This month's plan</span>
-            <span className={remaining < 0 ? "neg" : ""}>
-              <CountUp value={remaining} /> <span className="hero-of">of {rupees(income)}</span>
-            </span>
-          </div>
+          <dl className="hero-stats">
+            <div>
+              <dt>Plan left</dt>
+              <dd className={remaining < 0 && !hidden ? "neg" : ""}>{show(remaining)}</dd>
+            </div>
+            <div>
+              <dt>Spent</dt>
+              <dd>{show(spent)}</dd>
+            </div>
+            <div>
+              <dt>Income</dt>
+              <dd>{show(income)}</dd>
+            </div>
+          </dl>
           <div className="bar hero-bar">
             <div style={{ transform: `scaleX(${income > 0 ? Math.min(1, Math.max(0, spent / income)) : 0})` }} />
           </div>
@@ -95,7 +130,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
           <span className="banner-text">
             <b>Add salary and fixed spends?</b>
             <span className="muted">
-              +{rupees(income)} salary · {data.settings.fixed.length} spends, {rupees(fixedTotal)}
+              +{show(income)} salary · {data.settings.fixed.length} spends, {show(fixedTotal)}
             </span>
           </span>
           <button className="primary small" onClick={onAddFixed}>
@@ -115,11 +150,11 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
               <span className="jar-row-text">
                 <span className="jar-row-name">{j.name}</span>
                 <span className="jar-row-sub">
-                  {rupees(j.spent)} of {rupees(j.limit)}
+                  {show(j.spent)} of {show(j.limit)}
                 </span>
               </span>
               <span className={over ? "jar-row-left neg" : "jar-row-left"}>
-                {rupees(over ? -j.left : j.left)}
+                {show(over ? -j.left : j.left)}
                 <small>{over ? "over" : "left"}</small>
               </span>
             </button>
@@ -133,7 +168,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
               <span className="jar-row-sub">{j.id === "untracked" ? "Money gone, reason unknown" : "Not part of any limit"}</span>
             </span>
             <span className="jar-row-left">
-              {rupees(j.spent)}
+              {show(j.spent)}
               <small>{j.id === "untracked" ? "untracked" : "spent"}</small>
             </span>
           </button>

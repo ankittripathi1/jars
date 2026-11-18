@@ -456,7 +456,8 @@ main {
 }
 .hero-num {
   display: block;
-  font-size: clamp(1.9rem, 1.55rem + 2vw, 2.3rem);
+  /* The one big number on Home: 32 to 40px. */
+  font-size: clamp(2rem, 1.6rem + 2vw, 2.5rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -483,21 +484,33 @@ main {
   padding-top: 12px;
   border-top: 1px solid color-mix(in srgb, var(--on-primary-container) 14%, transparent);
 }
-.hero-foot {
+.hero-actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 2px 8px;
-  font-size: var(--text-small);
+  align-items: center;
+  gap: 4px;
+}
+.hero-eye {
+  margin: -6px 0;
+  color: inherit;
+}
+/* Small stats under the balance: plan left, spent, income. */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+.hero-stats dt {
+  font-size: var(--text-caption);
   font-weight: 650;
+  opacity: 0.75;
+}
+.hero-stats dd {
+  margin: 0;
+  font-size: var(--text-body-s);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-.hero-foot > span:first-child {
-  opacity: 0.8;
-}
-.hero-of {
-  opacity: 0.65;
-  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 .hero-bar {
   height: 6px;
