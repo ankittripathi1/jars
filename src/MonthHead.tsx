@@ -19,11 +19,11 @@ export function MonthHead({ eyebrow, month, onMonth }: { eyebrow: string; month:
 
   return (
     <header className="page-head">
-      <div>
+      <div className="month-head-text">
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="title">
           <button className="month-btn" onClick={() => setPicking(true)} aria-label={`${monthLabel(month)}. Pick a month`}>
-            {monthName}
+            <span className="month-name">{monthName}</span>
             <span className="month-caret" aria-hidden>
               {Icons.down}
             </span>

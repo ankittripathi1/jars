@@ -363,21 +363,35 @@ main {
 }
 
 /* Month name in the page head. Tap it to pick a month. */
+/* Text side of the month header. A size container, so the month name can shrink to fit next to the arrows. */
+.month-head-text {
+  flex: 1;
+  min-width: 0;
+  container-type: inline-size;
+}
 .month-btn {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
+  white-space: nowrap;
   min-height: 44px;
   margin: -6px -8px;
   padding: 0 8px;
   border-radius: 14px;
   font: inherit;
+  /* "September" plus the caret is about 6.5em wide. Shrink below 1em when the space is smaller. */
+  font-size: min(1em, 14cqi);
   letter-spacing: inherit;
   text-align: left;
   transition: background-color 140ms ease-out;
 }
 .month-btn:active {
   background: var(--surface);
+}
+.month-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .month-caret {
   display: inline-grid;
@@ -613,7 +627,8 @@ main {
   flex: none;
   place-items: center;
 }
-.ring svg {
+/* Only the progress circle. The jar icon inside .ring-icon is an svg too and must stay upright. */
+.ring > svg {
   position: absolute;
   inset: 0;
   transform: rotate(-90deg);
