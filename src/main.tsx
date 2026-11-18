@@ -1,6 +1,7 @@
 import { Component, StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { Icons } from "./ui";
 import "@fontsource-variable/dm-sans";
 import "./styles.css";
 
@@ -21,7 +22,7 @@ class CrashScreen extends Component<{ children: ReactNode }, { error: Error | nu
     return (
       <div className="crash">
         <p className="empty-icon" aria-hidden>
-          😵
+          {Icons.alert}
         </p>
         <h1 className="title">Something broke</h1>
         <p className="hint-text">Your data is safe. Reload the app. If it happens again, send this message:</p>

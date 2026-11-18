@@ -55,8 +55,8 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
           {preview !== null && (
             <div className="card compare">
               <div className="compare-row">
-                <span className="muted">❓ Untracked this month</span>
-                <b className={preview > 0 ? "neg" : ""}>{preview > 0 ? rupees(preview) : "None 🎉"}</b>
+                <span className="muted">Untracked this month</span>
+                <b className={preview > 0 ? "neg" : ""}>{preview > 0 ? rupees(preview) : "None"}</b>
               </div>
               <p className="hint-text">
                 {preview > 0

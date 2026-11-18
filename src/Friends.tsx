@@ -109,7 +109,7 @@ export function Friends({ entries, person, onPerson, onChange, toast }: Props) {
       {balances.length === 0 ? (
         <div className="empty enter">
           <p className="empty-icon" aria-hidden>
-            🤝
+            {Icons.friends}
           </p>
           <p>No friend money yet.</p>
           <p className="muted small-text">Tap + to add "I gave" or "I got".</p>

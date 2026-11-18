@@ -118,7 +118,7 @@ export function Settings({ data, onSettings, onName, onRunSetup, onRestore }: Pr
               <select aria-label="Jar" value={f.jar} onChange={(e) => update({ jar: e.target.value as JarId })}>
                 {ALL_JARS.map((j) => (
                   <option key={j.id} value={j.id}>
-                    {JAR_LOOK[j.id].icon} {j.name}
+                    {j.name}
                   </option>
                 ))}
               </select>

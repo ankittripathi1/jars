@@ -3,7 +3,7 @@ import { dayLabel, monthLabel, rupees } from "./format";
 import { groupByDay, history, jarName, type HistoryItem } from "./money";
 import { MonthHead } from "./MonthHead";
 import type { Data, FriendEntry, Income, Spend } from "./types";
-import { Avatar, JarIcon, stagger } from "./ui";
+import { Avatar, Icons, JarIcon, stagger } from "./ui";
 
 type Props = {
   data: Data;
@@ -48,7 +48,7 @@ export function History({ data, month, onMonth, onEditSpend, onEditIncome, onOpe
       {days.length === 0 ? (
         <div className="empty enter">
           <p className="empty-icon" aria-hidden>
-            🧾
+            {Icons.receipt}
           </p>
           <p>Nothing this month yet.</p>
         </div>
@@ -106,7 +106,7 @@ function Row({ x, onEditSpend, onEditIncome, onOpenFriend }: RowProps) {
     return (
       <button onClick={() => onEditIncome(x.item)}>
         <span className="jar-icon" style={{ "--c": "var(--pos)", width: 40, height: 40, fontSize: 19 } as CSSProperties} aria-hidden>
-          💰
+          {Icons.wallet}
         </span>
         <span className="list-text">
           <span className="list-main">{x.item.note || "Money in"}</span>

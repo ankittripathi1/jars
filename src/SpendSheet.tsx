@@ -5,7 +5,7 @@ import { ALL_JARS, jarName, monthOf, recentNotes } from "./money";
 import { Sheet } from "./Sheet";
 import { today } from "./store";
 import type { Income, JarId, Spend } from "./types";
-import { JAR_LOOK, JarIcon } from "./ui";
+import { Icons, JAR_LOOK, JarIcon } from "./ui";
 
 type Kind = "spend" | "income";
 
@@ -70,17 +70,17 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
                 <JarIcon jar={e.item.jar} size={64} />
               ) : (
                 <span className="jar-icon" style={{ "--c": "var(--pos)", width: 64, height: 64, fontSize: 30 } as CSSProperties} aria-hidden>
-                  💰
+                  {Icons.wallet}
                 </span>
               )
             }
             amount={e.kind === "spend" ? -e.item.amount : e.item.amount}
             title={e.item.note || (e.kind === "spend" ? jarName(e.item.jar) : "Money in")}
             details={[
-              [e.kind === "spend" ? "Jar" : "Type", e.kind === "spend" ? `${JAR_LOOK[e.item.jar].icon} ${jarName(e.item.jar)}` : "💰 Money in"],
+              [e.kind === "spend" ? "Jar" : "Type", e.kind === "spend" ? jarName(e.item.jar) : "Money in"],
               ["Date", fullDateLabel(e.item.date)],
               ["Note", e.item.note || <span className="muted">No note</span>],
-              ...(e.kind === "spend" && e.item.fromUntracked ? [["Paid from", "❓ Untracked money"] as [string, string]] : []),
+              ...(e.kind === "spend" && e.item.fromUntracked ? [["Paid from", "Untracked money"] as [string, string]] : []),
             ]}
             onEdit={() => setViewing(false)}
             onDelete={() => {
@@ -146,7 +146,7 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
                     setAmount(String(c.amount));
                   }}
                 >
-                  <span aria-hidden>{JAR_LOOK[c.jar].icon}</span> {c.note} · {rupees(c.amount)}
+                  <JarIcon jar={c.jar} size={26} /> {c.note} · {rupees(c.amount)}
                 </button>
               ))}
             </div>
@@ -187,7 +187,8 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
           {canUseUntracked && (
             <div className="from-untracked">
               <button type="button" role="switch" aria-checked={fromUntracked} className={fromUntracked ? "mini-chip on" : "mini-chip"} onClick={() => setFlag(!fromUntracked)}>
-                {fromUntracked ? "✓ Untracked money (old spend)" : "Untracked money (old spend)"}
+                {fromUntracked && Icons.check}
+                Untracked money (old spend)
               </button>
               {fromUntracked && (
                 <span className={tooBig ? "neg small-text" : "muted small-text"}>

@@ -393,6 +393,7 @@ main {
   margin-bottom: 8px;
 }
 .month-check {
+  display: grid;
   flex: none;
   color: var(--primary);
   font-weight: 750;
@@ -518,8 +519,10 @@ main {
   box-shadow: var(--shadow);
 }
 .banner-icon {
+  display: grid;
   flex: none;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
+  color: var(--primary);
 }
 .banner-text {
   display: flex;
@@ -619,7 +622,8 @@ main {
 }
 .ring-icon {
   position: relative;
-  line-height: 1;
+  display: grid;
+  color: var(--ink);
 }
 @keyframes ring-grow {
   from {
@@ -690,8 +694,21 @@ main {
  * Declared where it's used, because var(--c) is set inline per element.
  */
 .jar-icon,
-.pick.on {
+.ring,
+.pick {
   --ink: light-dark(color-mix(in srgb, var(--c) 58%, #000), color-mix(in srgb, var(--c) 75%, #fff));
+}
+/* Icons from the SVG set size with the font: 1em square. The parent sets font-size. */
+.jar-icon svg,
+.ring-icon svg,
+.pick-icon svg,
+.banner-icon svg,
+.empty-icon svg,
+.onboard-emoji svg,
+.month-check svg,
+.mini-chip svg {
+  width: 1em;
+  height: 1em;
 }
 .jar-icon {
   display: grid;
@@ -822,6 +839,8 @@ main {
 .empty-icon {
   margin-bottom: 8px;
   font-size: 2.5rem;
+  line-height: 1;
+  color: var(--muted);
 }
 
 .in-out {
@@ -1179,9 +1198,12 @@ main {
   display: none;
 }
 .chip {
+  display: inline-flex;
   flex: none;
+  align-items: center;
+  gap: 8px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 14px 0 9px;
   border-radius: 99px;
   background: var(--surface-2);
   font-size: var(--text-body-s);
@@ -1221,8 +1243,9 @@ main {
   transition: background-color 160ms ease-out, box-shadow 160ms ease-out, transform 140ms var(--ease-out);
 }
 .pick-icon {
+  display: grid;
   font-size: 1.45rem;
-  line-height: 1.2;
+  color: var(--ink);
   transition: transform 220ms var(--ease-spring);
 }
 .pick-name {
@@ -1288,6 +1311,9 @@ main {
   margin-top: -4px;
 }
 .mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: 44px;
   padding: 0 14px;
   border-radius: 99px;
@@ -1516,6 +1542,7 @@ main {
   margin-top: 12px;
   font-size: 3rem;
   line-height: 1;
+  color: var(--primary);
 }
 .onboard-money input {
   font-size: 1.4rem;

@@ -78,7 +78,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
       {income === 0 && (
         <section className="banner enter" style={stagger(1)}>
           <span className="banner-icon" aria-hidden>
-            👋
+            {Icons.wallet}
           </span>
           <span className="banner-text">
             <b>Set your monthly income</b>
@@ -90,7 +90,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
       {isCurrentMonth && needsFixedSpends(data, month) && (
         <section className="banner enter" style={stagger(1)}>
           <span className="banner-icon" aria-hidden>
-            📌
+            {Icons.calendar}
           </span>
           <span className="banner-text">
             <b>Add salary and fixed spends?</b>

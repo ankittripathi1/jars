@@ -71,7 +71,7 @@ function MonthPicker({ month, current, onClose }: { month: string; current: stri
                 }}
               >
                 <span className="list-main">{m === current ? "This month" : monthLabel(m)}</span>
-                {m === month && <span className="month-check" aria-hidden>✓</span>}
+                {m === month && <span className="month-check" aria-hidden>{Icons.check}</span>}
               </button>
             </li>
           ))}

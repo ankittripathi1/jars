@@ -72,7 +72,7 @@ export function Onboarding({ data, onDone }: Props) {
         {step === 0 && (
           <>
             <p className="onboard-emoji" aria-hidden>
-              🫙
+              {Icons.jars}
             </p>
             <h1 className="title">Let's set up your jars</h1>
             <p className="hint-text">Every rupee goes into a jar: needs, investing, savings, learning, fun, giving. Takes about a minute.</p>
@@ -149,7 +149,7 @@ export function Onboarding({ data, onDone }: Props) {
                     <select aria-label="Jar" value={f.jar} onChange={(e) => updateFixed(i, { jar: e.target.value as JarId })}>
                       {ALL_JARS.filter((j) => j.id !== "untracked").map((j) => (
                         <option key={j.id} value={j.id}>
-                          {JAR_LOOK[j.id].icon} {j.name}
+                          {j.name}
                         </option>
                       ))}
                     </select>
@@ -168,7 +168,7 @@ export function Onboarding({ data, onDone }: Props) {
             <h1 className="title">How much can you spend right now?</h1>
             <p className="hint-text">
               Bank + UPI + cash today. Leave out SIP and emergency fund. If some of this month's money went somewhere you don't remember, the app shows it as
-              ❓ Untracked.
+              Untracked.
             </p>
             <label className="amount-wrap">
               <span className="amount-prefix">₹</span>

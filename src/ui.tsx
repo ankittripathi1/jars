@@ -1,21 +1,9 @@
-// Small shared UI pieces: jar colors and icons, nav icons, animated numbers.
+// Small shared UI pieces: one SVG icon set (24px grid, currentColor), jar colors, animated numbers.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { rupees } from "./format";
 import type { JarId } from "./types";
 
-/** Color and emoji per jar. The colors are for fills; text and borders use the --ink variant in styles.css. */
-export const JAR_LOOK: Record<JarId, { color: string; icon: string }> = {
-  necessities: { color: "#4f7dd9", icon: "🏠" },
-  freedom: { color: "#3e9e6e", icon: "📈" },
-  longterm: { color: "#d9963a", icon: "🛟" },
-  education: { color: "#8e6bd9", icon: "📚" },
-  play: { color: "#d95b8c", icon: "🎉" },
-  give: { color: "#d96b4f", icon: "🎁" },
-  outside: { color: "#7a8494", icon: "✨" },
-  untracked: { color: "#a0786a", icon: "❓" },
-};
-
-/** Round tinted circle with the jar's emoji. */
+/** Round tinted circle with the jar's icon. */
 export function JarIcon({ jar, size = 40 }: { jar: JarId; size?: number }) {
   const look = JAR_LOOK[jar];
   return (
@@ -73,7 +61,92 @@ export const Icons = {
   next: svg(<path d="M9 18l6-6-6-6" />),
   down: svg(<path d="M6 9l6 6 6-6" />),
   close: svg(<path d="M18 6L6 18M6 6l12 12" />),
+  check: svg(<path d="M5 12.5l4.5 4.5L19 7.5" />),
+  // Jars
+  home: svg(
+    <>
+      <path d="M3 10.5L12 3l9 7.5" />
+      <path d="M5 9.5V20h14V9.5M10 20v-5h4v5" />
+    </>,
+  ),
+  growth: svg(
+    <>
+      <path d="M3 17l6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>,
+  ),
+  lifebuoy: svg(
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M5.6 5.6l3.6 3.6M14.8 14.8l3.6 3.6M18.4 5.6l-3.6 3.6M9.2 14.8l-3.6 3.6" />
+    </>,
+  ),
+  book: svg(
+    <>
+      <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5z" />
+      <path d="M4 19.5A1.5 1.5 0 0 0 5.5 21H20v-3" />
+    </>,
+  ),
+  star: svg(<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />),
+  gift: svg(
+    <>
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v8h14v-8M12 8v12" />
+      <path d="M12 8S10.5 3.5 8 4.2 7.5 8 12 8zM12 8s1.5-4.5 4-3.8.5 3.8-4 3.8z" />
+    </>,
+  ),
+  sparkles: svg(
+    <>
+      <path d="M11 3l1.8 5.2L18 10l-5.2 1.8L11 17l-1.8-5.2L4 10l5.2-1.8z" />
+      <path d="M18.5 15l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />
+    </>,
+  ),
+  help: svg(
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.4M12 17h.01" />
+    </>,
+  ),
+  // Other screens
+  wallet: svg(
+    <>
+      <path d="M4 7a2 2 0 0 1 2-2h12v4" />
+      <path d="M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01" />
+    </>,
+  ),
+  receipt: svg(
+    <>
+      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" />
+      <path d="M9 8h6M9 12h6" />
+    </>,
+  ),
+  calendar: svg(
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M3 10h18M8 3v4M16 3v4" />
+    </>,
+  ),
+  alert: svg(
+    <>
+      <path d="M12 3L2 20h20z" />
+      <path d="M12 10v4M12 17h.01" />
+    </>,
+  ),
 };
+
+/** Color and icon per jar. The colors are for fills; text, icons and borders use the --ink variant in styles.css. */
+export const JAR_LOOK: Record<JarId, { color: string; icon: ReactNode }> = {
+  necessities: { color: "#4f7dd9", icon: Icons.home },
+  freedom: { color: "#3e9e6e", icon: Icons.growth },
+  longterm: { color: "#d9963a", icon: Icons.lifebuoy },
+  education: { color: "#8e6bd9", icon: Icons.book },
+  play: { color: "#d95b8c", icon: Icons.star },
+  give: { color: "#d96b4f", icon: Icons.gift },
+  outside: { color: "#7a8494", icon: Icons.sparkles },
+  untracked: { color: "#a0786a", icon: Icons.help },
+};
+
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
