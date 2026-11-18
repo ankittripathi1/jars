@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
-import { addMonths, balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
+import { balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
+import { MonthHead } from "./MonthHead";
 import type { Data, JarId, Spend } from "./types";
 import { Icons, JAR_LOOK, JarIcon, Ring, stagger, useCountUp } from "./ui";
 
@@ -25,7 +26,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
   const shownMoney = useCountUp(money ?? 0);
   const shownRemaining = useCountUp(remaining);
   const fixedTotal = data.settings.fixed.reduce((s, f) => s + f.amount, 0);
-  const [monthName, year] = monthLabel(month).split(" ");
+  const year = monthLabel(month).split(" ")[1];
   // Untracked = stored entries (from older months) + this month's live amount.
   const extras = EXTRA_JARS.map((j) => ({ ...j, spent: jarSpent(data, month, j.id) + (j.id === "untracked" ? untracked(data, month) : 0) })).filter(
     (j) => j.spent > 0,
@@ -33,20 +34,7 @@ export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFix
 
   return (
     <>
-      <header className="page-head">
-        <div>
-          <p className="eyebrow">{data.name ? `Hi ${data.name} · ${year}` : year}</p>
-          <h1 className="title">{monthName}</h1>
-        </div>
-        <div className="head-actions">
-          <button className="icon-btn tonal" onClick={() => onMonth(addMonths(month, -1))} aria-label="Previous month">
-            {Icons.back}
-          </button>
-          <button className="icon-btn tonal" onClick={() => onMonth(addMonths(month, 1))} aria-label="Next month">
-            {Icons.next}
-          </button>
-        </div>
-      </header>
+      <MonthHead eyebrow={data.name ? `Hi ${data.name} · ${year}` : (year ?? "")} month={month} onMonth={onMonth} />
 
       <section className="hero enter" style={stagger(0)}>
         <div className="hero-row">

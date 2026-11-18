@@ -70,6 +70,7 @@ export const Icons = {
   plus: svg(<path d="M12 5v14M5 12h14" />),
   back: svg(<path d="M15 18l-6-6 6-6" />),
   next: svg(<path d="M9 18l6-6-6-6" />),
+  down: svg(<path d="M6 9l6 6 6-6" />),
   close: svg(<path d="M18 6L6 18M6 6l12 12" />),
 };
 

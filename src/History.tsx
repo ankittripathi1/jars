@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
-import { addMonths, history, jarName, type HistoryItem } from "./money";
+import { history, jarName, type HistoryItem } from "./money";
+import { MonthHead } from "./MonthHead";
 import type { Data, FriendEntry, Income, Spend } from "./types";
-import { Avatar, Icons, JarIcon, stagger } from "./ui";
+import { Avatar, JarIcon, stagger } from "./ui";
 
 type Props = {
   data: Data;
@@ -19,25 +20,11 @@ export function History({ data, month, onMonth, onEditSpend, onEditIncome, onOpe
   const moneyIn = items.filter((x) => x.amount > 0).reduce((s, x) => s + x.amount, 0);
   const moneyOut = items.filter((x) => x.amount < 0).reduce((s, x) => s - x.amount, 0);
   const days = [...new Set(items.map((x) => x.date))];
-  const [monthName, year] = monthLabel(month).split(" ");
   let row = 0;
 
   return (
     <>
-      <header className="page-head">
-        <div>
-          <p className="eyebrow">History · {year}</p>
-          <h1 className="title">{monthName}</h1>
-        </div>
-        <div className="head-actions">
-          <button className="icon-btn tonal" onClick={() => onMonth(addMonths(month, -1))} aria-label="Previous month">
-            {Icons.back}
-          </button>
-          <button className="icon-btn tonal" onClick={() => onMonth(addMonths(month, 1))} aria-label="Next month">
-            {Icons.next}
-          </button>
-        </div>
-      </header>
+      <MonthHead eyebrow={`History · ${monthLabel(month).split(" ")[1]}`} month={month} onMonth={onMonth} />
 
       <section className="in-out enter" style={stagger(0)}>
         <div>

@@ -9,14 +9,16 @@ import { Avatar, Icons, stagger } from "./ui";
 
 type Props = {
   entries: FriendEntry[];
+  // The open person's page, or null for the list. App holds it so the top bar can show Back.
+  person: string | null;
+  onPerson: (person: string | null) => void;
   onChange: (entries: FriendEntry[]) => void;
   // Shows a snackbar. `undo` adds an Undo button.
   toast: (text: string, undo?: () => void) => void;
 };
 
 /** Money given to and got from friends. Separate from the jars. */
-export function Friends({ entries, onChange, toast }: Props) {
-  const [person, setPerson] = useState<string | null>(null);
+export function Friends({ entries, person, onPerson, onChange, toast }: Props) {
   // null = closed, "add" = new entry, or a saved entry to view/edit.
   const [open, setOpen] = useState<"add" | FriendEntry | null>(null);
   const balances = friendBalances(entries);
@@ -60,7 +62,7 @@ export function Friends({ entries, onChange, toast }: Props) {
     return (
       <>
         <header className="page-head">
-          <button className="icon-btn tonal" onClick={() => setPerson(null)} aria-label="Back">
+          <button className="icon-btn tonal" onClick={() => onPerson(null)} aria-label="Back">
             {Icons.back}
           </button>
           {addButton}
@@ -116,7 +118,7 @@ export function Friends({ entries, onChange, toast }: Props) {
         <ul className="list">
           {balances.map((b, i) => (
             <li key={b.person} className="enter" style={stagger(i)}>
-              <button onClick={() => setPerson(b.person)}>
+              <button onClick={() => onPerson(b.person)}>
                 <Avatar name={b.person} />
                 <span className="list-main">{b.person}</span>
                 <span className={b.balance > 0 ? "list-amount pos" : b.balance < 0 ? "list-amount neg" : "muted"}>

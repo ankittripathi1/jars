@@ -41,6 +41,7 @@ export function App() {
   const currentMonth = monthOf(today());
   const [month, setMonth] = useState(currentMonth);
   const [openJar, setOpenJar] = useState<JarId | null>(null);
+  const [openFriend, setOpenFriend] = useState<string | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
   const [lastJar, setLastJar] = useState<JarId>(loadLastJar);
   const [dir, setDir] = useState<Dir>("none");
@@ -109,7 +110,7 @@ export function App() {
   };
   const changeMonth = (m: string) => go(m > month ? "fwd" : "back", () => setMonth(m));
 
-  const pageKey = `${tab}-${openJar ?? ""}-${month}`;
+  const pageKey = `${tab}-${openJar ?? ""}-${openFriend ?? ""}-${month}`;
   // New page starts at the top, like a native app.
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -117,7 +118,23 @@ export function App() {
 
   // Small title in the top bar once the big page title scrolls away.
   const barTitle =
-    tab === "home" ? (openJar ? jarName(openJar) : monthLabel(month)) : tab === "history" ? `History · ${monthLabel(month)}` : tab === "friends" ? "Friends" : "Settings";
+    tab === "home"
+      ? openJar
+        ? jarName(openJar)
+        : monthLabel(month)
+      : tab === "history"
+        ? `History · ${monthLabel(month)}`
+        : tab === "friends"
+          ? (openFriend ?? "Friends")
+          : "Settings";
+
+  // Detail screens (a jar, a friend) get Back in the top bar too, so it never scrolls away.
+  const back =
+    tab === "home" && openJar
+      ? () => go("back", () => setOpenJar(null))
+      : tab === "friends" && openFriend !== null
+        ? () => go("back", () => setOpenFriend(null))
+        : null;
 
   // First open: the setup asks things in the right order before the app shows.
   if (!data.onboarded) return <Onboarding data={data} onDone={(d) => update(() => d)} />;
@@ -125,6 +142,11 @@ export function App() {
   return (
     <div className="app">
       <header className={scrolled ? "topbar on" : "topbar"} aria-hidden={!scrolled}>
+        {back && (
+          <button className="icon-btn topbar-back" onClick={back} tabIndex={scrolled ? 0 : -1} aria-label="Back">
+            {Icons.back}
+          </button>
+        )}
         <span>{barTitle}</span>
       </header>
       <main key={pageKey} className={`page ${dir}`}>
@@ -152,7 +174,15 @@ export function App() {
             onOpenFriend={(item) => setSheet({ mode: "friend", item })}
           />
         )}
-        {tab === "friends" && <Friends entries={data.friends} onChange={(friends) => update((d) => ({ ...d, friends }))} toast={showToast} />}
+        {tab === "friends" && (
+          <Friends
+            entries={data.friends}
+            person={openFriend}
+            onPerson={(p) => go(p === null ? "back" : "fwd", () => setOpenFriend(p))}
+            onChange={(friends) => update((d) => ({ ...d, friends }))}
+            toast={showToast}
+          />
+        )}
         {tab === "settings" && (
           <Settings
             data={data}
@@ -192,10 +222,11 @@ export function App() {
               className={tab === t.id ? "tab on" : "tab"}
               aria-current={tab === t.id ? "page" : undefined}
               onClick={() => {
-                if (tab === t.id && !openJar) return;
+                if (tab === t.id && !openJar && openFriend === null) return;
                 go("none", () => {
                   setTab(t.id);
                   setOpenJar(null);
+                  setOpenFriend(null);
                 });
               }}
             >

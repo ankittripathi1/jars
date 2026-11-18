@@ -289,6 +289,16 @@ main {
   transform: none;
   box-shadow: 0 1px 0 var(--line);
 }
+/* Back on detail screens. Shows with the bar once the page's own back button scrolls away. */
+.topbar-back {
+  position: absolute;
+  left: max(8px, env(safe-area-inset-left));
+  bottom: 2px;
+  color: var(--text);
+}
+.topbar.on .topbar-back {
+  pointer-events: auto;
+}
 .topbar span {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -352,9 +362,51 @@ main {
   background: var(--surface);
   color: var(--text);
 }
-.icon-btn:active {
+.icon-btn:not(:disabled):active {
   transform: scale(0.92);
   background: var(--surface-3);
+}
+.icon-btn:disabled {
+  opacity: 0.38;
+}
+
+/* Month name in the page head. Tap it to pick a month. */
+.month-btn {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 44px;
+  margin: -6px -8px;
+  padding: 0 8px;
+  border-radius: 14px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  transition: background-color 140ms ease-out;
+}
+.month-btn:active {
+  background: var(--surface);
+}
+.month-caret {
+  display: inline-grid;
+  flex: none;
+  margin-left: 4px;
+  color: var(--muted);
+}
+.month-caret svg {
+  width: 20px;
+  height: 20px;
+}
+.month-list {
+  margin-bottom: 8px;
+}
+.month-check {
+  flex: none;
+  color: var(--primary);
+  font-weight: 750;
+}
+.list li > button[aria-current] {
+  color: var(--primary);
 }
 
 /* ---------- Home: hero ---------- */
