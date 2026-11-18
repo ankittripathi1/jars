@@ -167,13 +167,14 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
           )}
 
           <div className="row">
-            <input
-              placeholder={kind === "spend" ? "Note (tea, cab...)" : "Note (salary, refund...)"}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              aria-label="Note"
-            />
-            <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="Date" />
+            <label className="field small">
+              <span className="field-label">Note</span>
+              <input placeholder={kind === "spend" ? "Tea, cab..." : "Salary, refund..."} value={note} onChange={(e) => setNote(e.target.value)} />
+            </label>
+            <label className="field small">
+              <span className="field-label">Date</span>
+              <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+            </label>
           </div>
 
           {canUseUntracked && (

@@ -338,8 +338,8 @@ main {
   display: grid;
   place-items: center;
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 99px;
   color: var(--muted);
   transition: transform 140ms var(--ease-out), background-color 140ms ease-out;
@@ -380,7 +380,9 @@ main {
   font-weight: 650;
   opacity: 0.8;
 }
+/* Looks small, but the ::before below grows the tap area to 44px. */
 .hero-chip {
+  position: relative;
   min-height: 28px;
   padding: 0 12px;
   border-radius: 99px;
@@ -388,6 +390,11 @@ main {
   font-size: 0.78rem;
   font-weight: 700;
   transition: transform 140ms var(--ease-out);
+}
+.hero-chip::before {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
 }
 .hero-chip:active {
   transform: scale(0.94);
@@ -895,7 +902,7 @@ main {
   flex: none;
   align-items: center;
   gap: 6px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 16px 0 12px;
   border-radius: 99px;
   background: var(--primary-container);
@@ -961,7 +968,7 @@ main {
 }
 .toast button {
   flex: none;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
   border-radius: 10px;
   color: var(--primary-container);
@@ -1010,6 +1017,10 @@ main {
   from {
     transform: translateY(100%);
   }
+}
+/* The sheet takes focus on open so Tab starts inside it. No ring for that. */
+.sheet:focus {
+  outline: none;
 }
 .sheet-head {
   position: sticky;
@@ -1099,7 +1110,7 @@ main {
 }
 .chip {
   flex: none;
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 14px;
   border-radius: 99px;
   background: var(--surface-2);
@@ -1205,7 +1216,7 @@ main {
   margin-top: -4px;
 }
 .mini-chip {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 14px;
   border-radius: 99px;
   color: var(--muted);
@@ -1308,6 +1319,15 @@ main {
 }
 .field-label {
   font-weight: 650;
+}
+/* Short label above a sheet input. */
+.field.small {
+  gap: 4px;
+}
+.field.small .field-label {
+  padding-left: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 .share-row {
   display: grid;

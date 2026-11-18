@@ -208,15 +208,24 @@ export function FriendSheet({ people, defaultPerson, editing, onSave, onDelete, 
             <span className="amount-prefix">₹</span>
             <input className="amount-input" inputMode="decimal" placeholder="0" autoFocus value={amount} onChange={(e) => setAmount(cleanAmountInput(e.target.value))} aria-label="Amount" />
           </label>
-          <input list="people" placeholder="Person" value={person} onChange={(e) => setPerson(e.target.value)} aria-label="Person" />
+          <label className="field small">
+            <span className="field-label">Person</span>
+            <input list="people" placeholder="Name" value={person} onChange={(e) => setPerson(e.target.value)} />
+          </label>
           <datalist id="people">
             {people.map((p) => (
               <option key={p} value={p} />
             ))}
           </datalist>
           <div className="row">
-            <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note" />
-            <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="Date" />
+            <label className="field small">
+              <span className="field-label">Note</span>
+              <input placeholder="Optional" value={note} onChange={(e) => setNote(e.target.value)} />
+            </label>
+            <label className="field small">
+              <span className="field-label">Date</span>
+              <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
+            </label>
           </div>
           <button className="primary" type="submit" disabled={!valid}>
             Save
