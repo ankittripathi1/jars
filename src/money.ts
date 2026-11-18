@@ -229,6 +229,17 @@ export function history(data: Data, month: string): HistoryItem[] {
     .map(({ x }) => x);
 }
 
+/** Splits a list already sorted by date into one group per day, in one pass. */
+export function groupByDay<T extends { date: string }>(sorted: T[]): { day: string; items: T[] }[] {
+  const groups: { day: string; items: T[] }[] = [];
+  for (const x of sorted) {
+    const last = groups[groups.length - 1];
+    if (last?.day === x.date) last.items.push(x);
+    else groups.push({ day: x.date, items: [x] });
+  }
+  return groups;
+}
+
 /** The last n different notes, newest first, each with the jar and amount it was last used with. */
 export function recentNotes(spends: Spend[], n = 5): { note: string; jar: JarId; amount: number }[] {
   const seen = new Set<string>();

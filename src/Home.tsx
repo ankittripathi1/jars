@@ -1,6 +1,6 @@
-import type { CSSProperties } from "react";
+import { useMemo, type CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
-import { balance, EXTRA_JARS, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
+import { balance, EXTRA_JARS, groupByDay, jarName, jarSpent, jarSummaries, needsFixedSpends, overallRemaining, spendsInMonth, untracked } from "./money";
 import { MonthHead } from "./MonthHead";
 import type { Data, JarId, Spend } from "./types";
 import { CountUp, Icons, JAR_LOOK, JarIcon, Ring, stagger } from "./ui";
@@ -18,17 +18,23 @@ type HomeProps = {
 
 /** Month overview: real money left, this month's plan, then one card per jar. */
 export function Home({ data, month, isCurrentMonth, onMonth, onOpenJar, onAddFixed, onEditBalance }: HomeProps) {
-  const jars = jarSummaries(data, month);
-  const remaining = overallRemaining(data, month);
+  // Only when the data or month changes, not on every App render (a toast, a sheet opening).
+  const { jars, remaining, money, extras } = useMemo(
+    () => ({
+      jars: jarSummaries(data, month),
+      remaining: overallRemaining(data, month),
+      money: balance(data),
+      // Untracked = stored entries (from older months) + this month's live amount.
+      extras: EXTRA_JARS.map((j) => ({ ...j, spent: jarSpent(data, month, j.id) + (j.id === "untracked" ? untracked(data, month) : 0) })).filter(
+        (j) => j.spent > 0,
+      ),
+    }),
+    [data, month],
+  );
   const income = data.settings.income;
   const spent = income - remaining;
-  const money = balance(data);
   const fixedTotal = data.settings.fixed.reduce((s, f) => s + f.amount, 0);
   const year = monthLabel(month).split(" ")[1];
-  // Untracked = stored entries (from older months) + this month's live amount.
-  const extras = EXTRA_JARS.map((j) => ({ ...j, spent: jarSpent(data, month, j.id) + (j.id === "untracked" ? untracked(data, month) : 0) })).filter(
-    (j) => j.spent > 0,
-  );
 
   return (
     <>
@@ -147,15 +153,22 @@ type JarDetailProps = {
 
 /** All spends of one jar in a month, grouped by day, newest first. Tap one to edit it. */
 export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) {
-  const list = spendsInMonth(data.spends, month)
-    .map((s, i) => ({ s, i }))
-    // The Untracked page also lists old spends marked "Untracked money": they explain part of it.
-    .filter(({ s }) => s.jar === jar || (jar === "untracked" && s.fromUntracked))
-    .sort((a, b) => b.s.date.localeCompare(a.s.date) || b.i - a.i)
-    .map(({ s }) => s);
-  const summary = jarSummaries(data, month).find((j) => j.id === jar);
+  const { list, days, summary, liveUntracked, storedUntracked } = useMemo(() => {
+    const list = spendsInMonth(data.spends, month)
+      .map((s, i) => ({ s, i }))
+      // The Untracked page also lists old spends marked "Untracked money": they explain part of it.
+      .filter(({ s }) => s.jar === jar || (jar === "untracked" && s.fromUntracked))
+      .sort((a, b) => b.s.date.localeCompare(a.s.date) || b.i - a.i)
+      .map(({ s }) => s);
+    return {
+      list,
+      days: groupByDay(list),
+      summary: jarSummaries(data, month).find((j) => j.id === jar),
+      liveUntracked: jar === "untracked" ? untracked(data, month) : 0,
+      storedUntracked: jar === "untracked" ? jarSpent(data, month, "untracked") : 0,
+    };
+  }, [data, month, jar]);
   const total = list.reduce((sum, s) => sum + s.amount, 0);
-  const days = [...new Set(list.map((s) => s.date))];
   const ratio = summary && summary.limit > 0 ? Math.min(1, summary.spent / summary.limit) : 0;
   const over = summary ? summary.spent > summary.limit : false;
   let row = 0;
@@ -192,7 +205,7 @@ export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) 
           <>
             <div className="jar-top">
               <span className="muted">Still untracked</span>
-              <b className={untracked(data, month) > 0 ? "neg" : ""}>{rupees(untracked(data, month) + jarSpent(data, month, "untracked"))}</b>
+              <b className={liveUntracked > 0 ? "neg" : ""}>{rupees(liveUntracked + storedUntracked)}</b>
             </div>
             <p className="hint-text detail-hint">
               Money that left but no entry explains it. When you remember a spend, add it and turn on "Untracked money (old spend)". It shows up
@@ -210,13 +223,11 @@ export function JarDetail({ data, month, jar, onBack, onEdit }: JarDetailProps) 
       {list.length === 0 ? (
         <p className="empty">No spends here yet.</p>
       ) : (
-        days.map((day) => (
+        days.map(({ day, items }) => (
           <section key={day}>
             <h3 className="day-head">{dayLabel(day)}</h3>
             <ul className="list">
-              {list
-                .filter((s) => s.date === day)
-                .map((s) => (
+              {items.map((s) => (
                   <li key={s.id} className="enter" style={stagger(2 + row++)}>
                     <button onClick={() => onEdit(s)}>
                       <span className="list-main">

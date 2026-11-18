@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { EntryView } from "./EntryView";
 import { amountWidth, cleanAmountInput, fullDateLabel, parseAmount, rupees } from "./format";
 import { ALL_JARS, jarName, monthOf, recentNotes } from "./money";
@@ -41,16 +41,22 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
   const [flag, setFlag] = useState(wasFlagged);
   const [viewing, setViewing] = useState(editing !== undefined);
 
+  // Worked out once when the sheet opens, not on every key press. The spends don't change while it's open.
+  const [notes] = useState(() => (editing ? [] : recentNotes(spends)));
+  const entryMonth = monthOf(date);
+  // Keyed by month only: the data can't change while the sheet is open.
+  const untrackedInMonth = useMemo(() => untrackedLeft(entryMonth), [entryMonth]);
+
   const parsed = parseAmount(amount);
   // How much Untracked money this spend can explain. When editing a marked spend, its own amount is free again.
   const room =
-    untrackedLeft(monthOf(date)) + (wasFlagged && editing?.kind === "spend" && monthOf(editing.item.date) === monthOf(date) ? editing.item.amount : 0);
+    untrackedInMonth + (wasFlagged && editing?.kind === "spend" && monthOf(editing.item.date) === monthOf(date) ? editing.item.amount : 0);
   const canUseUntracked = kind === "spend" && jar !== "untracked" && (room > 0 || wasFlagged);
   const fromUntracked = canUseUntracked && flag;
   const tooBig = fromUntracked && parsed !== null && parsed > room;
   // Untracked is not a real category. It only shows up when editing an Untracked entry itself.
   const jarChoices = ALL_JARS.filter((j) => j.id !== "untracked" || jar === "untracked");
-  const chips = editing || kind === "income" ? [] : recentNotes(spends);
+  const chips = kind === "income" ? [] : notes;
   const title = editing ? (kind === "spend" ? "Edit spend" : "Edit money in") : "Add";
 
   if (editing && viewing) {

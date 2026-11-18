@@ -1,6 +1,6 @@
-import type { CSSProperties } from "react";
+import { useMemo, type CSSProperties } from "react";
 import { dayLabel, monthLabel, rupees } from "./format";
-import { history, jarName, type HistoryItem } from "./money";
+import { groupByDay, history, jarName, type HistoryItem } from "./money";
 import { MonthHead } from "./MonthHead";
 import type { Data, FriendEntry, Income, Spend } from "./types";
 import { Avatar, JarIcon, stagger } from "./ui";
@@ -16,10 +16,18 @@ type Props = {
 
 /** Every entry of the month in one list, like a UPI app's transaction history. */
 export function History({ data, month, onMonth, onEditSpend, onEditIncome, onOpenFriend }: Props) {
-  const items = history(data, month);
-  const moneyIn = items.filter((x) => x.amount > 0).reduce((s, x) => s + x.amount, 0);
-  const moneyOut = items.filter((x) => x.amount < 0).reduce((s, x) => s - x.amount, 0);
-  const days = [...new Set(items.map((x) => x.date))];
+  // Only when the data or month changes, not on every App render (a toast, a sheet opening).
+  const { days, moneyIn, moneyOut } = useMemo(() => {
+    const items = history(data, month);
+    let moneyIn = 0;
+    let moneyOut = 0;
+    for (const x of items) {
+      if (x.amount > 0) moneyIn += x.amount;
+      else moneyOut -= x.amount;
+    }
+    const days = groupByDay(items).map((g) => ({ ...g, net: g.items.reduce((s, x) => s + x.amount, 0) }));
+    return { days, moneyIn, moneyOut };
+  }, [data, month]);
   let row = 0;
 
   return (
@@ -37,7 +45,7 @@ export function History({ data, month, onMonth, onEditSpend, onEditIncome, onOpe
         </div>
       </section>
 
-      {items.length === 0 ? (
+      {days.length === 0 ? (
         <div className="empty enter">
           <p className="empty-icon" aria-hidden>
             🧾
@@ -45,9 +53,7 @@ export function History({ data, month, onMonth, onEditSpend, onEditIncome, onOpe
           <p>Nothing this month yet.</p>
         </div>
       ) : (
-        days.map((day) => {
-          const list = items.filter((x) => x.date === day);
-          const net = list.reduce((s, x) => s + x.amount, 0);
+        days.map(({ day, items: list, net }) => {
           return (
             <section key={day}>
               <h3 className="day-head">

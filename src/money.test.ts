@@ -5,6 +5,7 @@ import {
   balance,
   EXTRA_NOTE,
   friendBalances,
+  groupByDay,
   history,
   jarSpent,
   jarSummaries,
@@ -238,5 +239,15 @@ describe("paise", () => {
       { amount: 0.2, jar: "play", note: "b", date: "2026-11-02" },
     ]);
     expect(jarSpent(data, "2026-11", "play")).toBe(0.3);
+  });
+});
+
+describe("groupByDay", () => {
+  it("makes one group per day and keeps the order", () => {
+    const rows = [{ date: "2026-11-03", n: 1 }, { date: "2026-11-03", n: 2 }, { date: "2026-11-01", n: 3 }];
+    expect(groupByDay(rows)).toEqual([
+      { day: "2026-11-03", items: [rows[0], rows[1]] },
+      { day: "2026-11-01", items: [rows[2]] },
+    ]);
   });
 });
