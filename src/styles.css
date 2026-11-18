@@ -1000,7 +1000,7 @@ main {
 .sheet {
   width: 100%;
   max-width: 560px;
-  max-height: 92dvh;
+  max-height: 92%;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 0 var(--gutter) calc(20px + env(safe-area-inset-bottom));
@@ -1031,6 +1031,17 @@ main {
   background: var(--bg);
   touch-action: none;
   cursor: grab;
+}
+/* Main button pinned to the bottom of the sheet, so it shows with the keyboard open. */
+.sheet-foot {
+  position: sticky;
+  z-index: 1;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 8px var(--gutter) max(8px, env(safe-area-inset-bottom));
+  background: var(--bg);
 }
 .grabber {
   display: block;
@@ -1065,10 +1076,10 @@ main {
   color: var(--muted);
 }
 .amount-input {
-  width: auto;
+  /* Fallback: --len characters wide. Digits are 1ch each in tabular nums. */
+  width: calc(var(--len, 1) * 1ch + 0.2ch);
   min-width: 2ch;
   max-width: 75%;
-  field-sizing: content;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1077,6 +1088,12 @@ main {
   letter-spacing: -0.03em;
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+@supports (field-sizing: content) {
+  .amount-input {
+    width: auto;
+    field-sizing: content;
+  }
 }
 .amount-input:focus {
   background: transparent;

@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { cleanAmountInput, parseAmount, rupees } from "./format";
+import { amountWidth, cleanAmountInput, parseAmount, rupees } from "./format";
 import { ALL_JARS, BUDGET_JARS, jarLimit, setBalance, sharesTotal } from "./money";
 import { MoneyInput } from "./Settings";
 import { newId, today } from "./store";
@@ -178,6 +178,7 @@ export function Onboarding({ data, onDone }: Props) {
                 placeholder="0"
                 autoFocus
                 value={money}
+                style={amountWidth(money)}
                 onChange={(e) => setMoney(cleanAmountInput(e.target.value))}
                 aria-label="Money you have now"
               />

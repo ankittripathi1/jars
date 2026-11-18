@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 /** 125000 -> "₹1,25,000", 15.5 -> "₹15.50" (Indian grouping). Negative keeps the sign in front. */
 export function rupees(n: number): string {
   const abs = Math.abs(n);
@@ -33,6 +35,14 @@ export function parseAmount(text: string): number | null {
 }
 
 /** Keep only what an amount box accepts: digits and one dot with up to 2 decimals. */
+/**
+ * Width for the big amount input on browsers without field-sizing (Safari before 26.2).
+ * Use as style={amountWidth(value)}. styles.css drops it where field-sizing works.
+ */
+export function amountWidth(value: string) {
+  return { "--len": Math.max(1, value.length) } as CSSProperties;
+}
+
 export function cleanAmountInput(text: string): string {
   const s = text.replace(/[^\d.]/g, "");
   const [whole = "", ...rest] = s.split(".");

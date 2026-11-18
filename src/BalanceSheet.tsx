@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cleanAmountInput, parseAmount, rupees } from "./format";
+import { amountWidth, cleanAmountInput, parseAmount, rupees } from "./format";
 import { balance, monthOf, setBalance, untracked } from "./money";
 import { Sheet } from "./Sheet";
 import { newId, today } from "./store";
@@ -45,6 +45,7 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
               placeholder="0"
               autoFocus
               value={amount}
+              style={amountWidth(amount)}
               onChange={(e) => setAmount(cleanAmountInput(e.target.value))}
               onFocus={(e) => e.target.select()}
               aria-label="Money you have now"
@@ -65,9 +66,11 @@ export function BalanceSheet({ data, onSave, onClose }: Props) {
             </div>
           )}
 
-          <button className="primary" type="submit" disabled={actual === null}>
-            Save balance
-          </button>
+          <div className="sheet-foot">
+            <button className="primary" type="submit" disabled={actual === null}>
+              Save balance
+            </button>
+          </div>
         </form>
       )}
     </Sheet>

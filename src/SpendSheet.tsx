@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { EntryView } from "./EntryView";
-import { cleanAmountInput, fullDateLabel, parseAmount, rupees } from "./format";
+import { amountWidth, cleanAmountInput, fullDateLabel, parseAmount, rupees } from "./format";
 import { ALL_JARS, jarName, monthOf, recentNotes } from "./money";
 import { Sheet } from "./Sheet";
 import { today } from "./store";
@@ -121,6 +121,7 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
               placeholder="0"
               autoFocus
               value={amount}
+              style={amountWidth(amount)}
               onChange={(e) => setAmount(cleanAmountInput(e.target.value))}
               aria-label="Amount"
             />
@@ -192,9 +193,6 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
             </div>
           )}
 
-          <button className="primary" type="submit" disabled={parsed === null || tooBig}>
-            {editing ? "Save" : parsed ? `Add ${kind === "income" ? "+" : ""}${rupees(parsed)}` : "Add"}
-          </button>
           {onDelete && (
             <button
               type="button"
@@ -207,6 +205,11 @@ export function SpendSheet({ spends, editing, defaultJar, untrackedLeft, onSaveS
               Delete
             </button>
           )}
+          <div className="sheet-foot">
+            <button className="primary" type="submit" disabled={parsed === null || tooBig}>
+              {editing ? "Save" : parsed ? `Add ${kind === "income" ? "+" : ""}${rupees(parsed)}` : "Add"}
+            </button>
+          </div>
         </form>
       )}
     </Sheet>

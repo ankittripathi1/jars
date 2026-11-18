@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EntryView } from "./EntryView";
-import { cleanAmountInput, dayLabel, fullDateLabel, parseAmount, rupees } from "./format";
+import { amountWidth, cleanAmountInput, dayLabel, fullDateLabel, parseAmount, rupees } from "./format";
 import { friendBalances } from "./money";
 import { Sheet } from "./Sheet";
 import { newId, today } from "./store";
@@ -206,7 +206,7 @@ export function FriendSheet({ people, defaultPerson, editing, onSave, onDelete, 
           </div>
           <label className="amount-wrap">
             <span className="amount-prefix">₹</span>
-            <input className="amount-input" inputMode="decimal" placeholder="0" autoFocus value={amount} onChange={(e) => setAmount(cleanAmountInput(e.target.value))} aria-label="Amount" />
+            <input className="amount-input" inputMode="decimal" placeholder="0" autoFocus value={amount} style={amountWidth(amount)} onChange={(e) => setAmount(cleanAmountInput(e.target.value))} aria-label="Amount" />
           </label>
           <label className="field small">
             <span className="field-label">Person</span>
@@ -227,9 +227,11 @@ export function FriendSheet({ people, defaultPerson, editing, onSave, onDelete, 
               <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} />
             </label>
           </div>
-          <button className="primary" type="submit" disabled={!valid}>
-            Save
-          </button>
+          <div className="sheet-foot">
+            <button className="primary" type="submit" disabled={!valid}>
+              Save
+            </button>
+          </div>
         </form>
       )}
     </Sheet>

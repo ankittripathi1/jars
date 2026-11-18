@@ -9,6 +9,7 @@ const EXIT_MS = 200;
  * A quick flick closes it too, even if it's short. Dragging up meets growing resistance.
  * Tab stays inside the sheet, and focus goes back to the button that opened it on close.
  * An autoFocus input inside keeps its focus; otherwise the sheet itself takes focus.
+ * Put the main button in a `.sheet-foot` as the last child so it stays visible while scrolling.
  * `children` gets a `close` function so forms can play the exit animation after saving.
  * `onClose` runs once the exit animation is done.
  */
@@ -20,6 +21,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   const sheet = useRef<HTMLDivElement>(null);
   // Read during the first render, before anything in the sheet takes focus.
   const opener = useRef(document.activeElement as HTMLElement | null);
+  const visible = useVisibleArea();
 
   const close = useCallback(() => {
     if (closed.current) return;
@@ -56,7 +58,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
   const dragging = start.current !== null;
 
   return (
-    <div className={closing ? "backdrop out" : "backdrop"} onClick={close}>
+    <div className={closing ? "backdrop out" : "backdrop"} onClick={close} style={visible ? { top: visible.top, bottom: "auto", height: visible.height } : undefined}>
       <div
         className={closing ? "sheet out" : "sheet"}
         ref={sheet}
@@ -104,6 +106,28 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
       </div>
     </div>
   );
+}
+
+/**
+ * iOS Safari keeps the page size when the keyboard opens, so a bottom sheet ends up behind it.
+ * Returns the part of the screen above the keyboard, or null when nothing covers the page.
+ * (Chrome on Android resizes the page itself, because of interactive-widget in index.html.)
+ */
+function useVisibleArea() {
+  const [area, setArea] = useState<{ top: number; height: number } | null>(null);
+  useEffect(() => {
+    const v = window.visualViewport;
+    if (!v) return;
+    const fit = () => setArea(v.height < window.innerHeight - 1 ? { top: v.offsetTop, height: v.height } : null);
+    fit();
+    v.addEventListener("resize", fit);
+    v.addEventListener("scroll", fit);
+    return () => {
+      v.removeEventListener("resize", fit);
+      v.removeEventListener("scroll", fit);
+    };
+  }, []);
+  return area;
 }
 
 const FOCUSABLE = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex]:not([tabindex="-1"])';
