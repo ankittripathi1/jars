@@ -1,5 +1,5 @@
 // Saves all app data as one JSON object in localStorage.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { migrateOldChecks } from "./money";
 import type { Data } from "./types";
 
@@ -117,20 +117,49 @@ function load(): Data {
   }
 }
 
-/** App data with auto-save. Also asks the browser not to clear our storage. */
+function save(data: Data) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch {
+    // Storage full or blocked. Nothing useful to do here; backup still works.
+  }
+}
+
+/** How long to wait after the last change before saving. Typing in a field makes a change per key. */
+const SAVE_DELAY_MS = 500;
+
+/**
+ * App data with auto-save. Saves once changes stop for SAVE_DELAY_MS, and right away when
+ * the page is hidden or closed, so a fast close does not lose the last edit.
+ * Also asks the browser not to clear our storage.
+ */
 export function useData(): [Data, (update: (d: Data) => Data) => void] {
   const [data, setData] = useState<Data>(load);
+  const latest = useRef(data);
+  const saved = useRef(data);
+
+  const flush = () => {
+    if (latest.current === saved.current) return;
+    save(latest.current);
+    saved.current = latest.current;
+  };
 
   useEffect(() => {
     void navigator.storage?.persist?.();
+    const onHide = () => document.visibilityState === "hidden" && flush();
+    window.addEventListener("pagehide", flush);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      document.removeEventListener("visibilitychange", onHide);
+      flush();
+    };
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(data));
-    } catch {
-      // Storage full or blocked. Nothing useful to do here; backup still works.
-    }
+    latest.current = data;
+    const timer = setTimeout(flush, SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [data]);
 
   return [data, setData];
