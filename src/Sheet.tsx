@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Icons } from "./ui";
 
 // Exit is faster than enter: the system responding should feel snappy.
@@ -10,13 +10,15 @@ const EXIT_MS = 200;
  * Tab stays inside the sheet, and focus goes back to the button that opened it on close.
  * An autoFocus input inside keeps its focus; otherwise the sheet itself takes focus.
  * Put the main button in a `.sheet-foot` as the last child so it stays visible while scrolling.
+ * The drag writes the transform straight on the element, so the form inside doesn't re-render per pointer move.
  * `children` gets a `close` function so forms can play the exit animation after saving.
  * `onClose` runs once the exit animation is done.
  */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false);
-  const [drag, setDrag] = useState(0);
+  // Pointer drag in progress, and how far the sheet is pulled (px, + is down).
   const start = useRef<{ y: number; t: number; id: number } | null>(null);
+  const drag = useRef(0);
   const closed = useRef(false);
   const sheet = useRef<HTMLDivElement>(null);
   // Read during the first render, before anything in the sheet takes focus.
@@ -55,7 +57,22 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     [],
   );
 
-  const dragging = start.current !== null;
+  // Moves the sheet by `px`. While the finger is down there is no transition, so it follows 1:1.
+  const setDrag = (px: number, following: boolean) => {
+    drag.current = px;
+    const el = sheet.current;
+    if (!el) return;
+    el.style.transform = px ? `translateY(${px}px)` : "";
+    el.style.transition = following ? "none" : "";
+  };
+
+  // The exit animation starts from wherever the drag left the sheet. Clear the inline styles in the same frame the "out" class lands.
+  useLayoutEffect(() => {
+    if (closing && sheet.current) {
+      sheet.current.style.transform = "";
+      sheet.current.style.transition = "";
+    }
+  }, [closing]);
 
   return (
     <div className={closing ? "backdrop out" : "backdrop"} onClick={close} style={visible ? { top: visible.top, bottom: "auto", height: visible.height } : undefined}>
@@ -67,7 +84,6 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
-        style={closing ? undefined : { transform: drag ? `translateY(${drag}px)` : undefined, transition: dragging ? "none" : undefined }}
       >
         <div
           className="sheet-head"
@@ -80,18 +96,19 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
             if (!start.current || e.pointerId !== start.current.id) return;
             const dy = e.clientY - start.current.y;
             // Down follows the finger. Up gets heavy fast.
-            setDrag(dy >= 0 ? dy : -Math.sqrt(-dy) * 2);
+            setDrag(dy >= 0 ? dy : -Math.sqrt(-dy) * 2, true);
           }}
           onPointerUp={(e) => {
             if (!start.current || e.pointerId !== start.current.id) return;
-            const velocity = drag / Math.max(1, performance.now() - start.current.t);
+            const dy = drag.current;
+            const velocity = dy / Math.max(1, performance.now() - start.current.t);
             start.current = null;
-            if (drag > 100 || (drag > 24 && velocity > 0.45)) close();
-            else setDrag(0);
+            if (dy > 100 || (dy > 24 && velocity > 0.45)) close();
+            else setDrag(0, false);
           }}
           onPointerCancel={() => {
             start.current = null;
-            setDrag(0);
+            setDrag(0, false);
           }}
         >
           <span className="grabber" />
@@ -118,7 +135,11 @@ function useVisibleArea() {
   useEffect(() => {
     const v = window.visualViewport;
     if (!v) return;
-    const fit = () => setArea(v.height < window.innerHeight - 1 ? { top: v.offsetTop, height: v.height } : null);
+    const fit = () => {
+      const next = v.height < window.innerHeight - 1 ? { top: v.offsetTop, height: v.height } : null;
+      // Scroll events come fast; only re-render when the area really moved.
+      setArea((a) => (a?.top === next?.top && a?.height === next?.height ? a : next));
+    };
     fit();
     v.addEventListener("resize", fit);
     v.addEventListener("scroll", fit);
