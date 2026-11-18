@@ -9,22 +9,29 @@
  * exits faster than enters. Reduced motion keeps fades, drops movement.
  */
 :root {
-  --bg: #ffffff;
-  --surface: #f5f6f8;
-  --surface-2: #eceef2;
-  --surface-3: #dfe3e9;
-  --text: #101418;
-  --muted: #677080;
-  --line: #eceef2;
-  --primary: #0e7c66;
-  --on-primary: #ffffff;
-  --primary-container: #e3f4ee;
-  --on-primary-container: #053a2f;
-  --pos: #16855a;
-  --neg: #d14343;
-  --untracked: #a0786a;
-  --scrim: rgb(16 20 24 / 0.38);
+  /* Each color is light-dark(light value, dark value). color-scheme below picks one. */
+  --bg: light-dark(#ffffff, #0b0d10);
+  --surface: light-dark(#f5f6f8, #15181c);
+  --surface-2: light-dark(#eceef2, #1f2328);
+  --surface-3: light-dark(#dfe3e9, #2b3036);
+  --text: light-dark(#101418, #eceef1);
+  --muted: light-dark(#677080, #8f97a3);
+  --line: light-dark(#eceef2, #1f2328);
+  --primary: light-dark(#0e7c66, #4fd1ae);
+  --on-primary: light-dark(#ffffff, #00382c);
+  --primary-container: light-dark(#e3f4ee, #103b31);
+  --on-primary-container: light-dark(#053a2f, #c9f2e5);
+  --pos: light-dark(#16855a, #5bd48f);
+  --neg: light-dark(#d14343, #f07171);
+  --untracked: light-dark(#a0786a, #c49a8b);
+  --scrim: light-dark(rgb(16 20 24 / 0.38), rgb(0 0 0 / 0.6));
   --shadow: none;
+
+  /* Small type sizes. 11px is the floor for any label. */
+  --text-label: 0.6875rem;
+  --text-caption: 0.75rem;
+  --text-small: 0.8125rem;
+  --text-body-s: 0.875rem;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
@@ -32,28 +39,14 @@
 
   --gutter: 20px;
   --nav-h: calc(62px + env(safe-area-inset-bottom));
+  /* Follows the phone unless Settings picked a theme (data-theme on <html>, see theme.ts). */
+  color-scheme: light dark;
+}
+:root[data-theme="light"] {
   color-scheme: light;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0d10;
-    --surface: #15181c;
-    --surface-2: #1f2328;
-    --surface-3: #2b3036;
-    --text: #eceef1;
-    --muted: #8f97a3;
-    --line: #1f2328;
-    --primary: #4fd1ae;
-    --on-primary: #00382c;
-    --primary-container: #103b31;
-    --on-primary-container: #c9f2e5;
-    --pos: #5bd48f;
-    --neg: #f07171;
-    --untracked: #c49a8b;
-    --scrim: rgb(0 0 0 / 0.6);
-    color-scheme: dark;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 /* ---------- Base ---------- */
@@ -63,8 +56,7 @@
 }
 
 html {
-  /* 14px on small phones, up to 16px on big ones. */
-  font-size: clamp(14px, 13px + 0.3vw, 16px);
+  font-size: 16px;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -155,11 +147,11 @@ main {
   color: var(--muted);
 }
 .small-text {
-  font-size: 0.86rem;
+  font-size: var(--text-small);
 }
 .hint-text {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: var(--text-body-s);
   line-height: 1.45;
 }
 .center {
@@ -326,7 +318,7 @@ main {
 }
 .eyebrow {
   margin-bottom: 1px;
-  font-size: 0.78rem;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--muted);
 }
@@ -337,7 +329,7 @@ main {
 }
 .section-title {
   margin: 28px 4px 10px;
-  font-size: 0.75rem;
+  font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -428,7 +420,7 @@ main {
   min-height: 32px;
 }
 .hero-label {
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   font-weight: 650;
   opacity: 0.8;
 }
@@ -439,7 +431,7 @@ main {
   padding: 0 12px;
   border-radius: 99px;
   background: color-mix(in srgb, var(--on-primary-container) 12%, transparent);
-  font-size: 0.78rem;
+  font-size: var(--text-caption);
   font-weight: 700;
   transition: transform 140ms var(--ease-out);
 }
@@ -495,7 +487,7 @@ main {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 2px 8px;
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
@@ -579,7 +571,7 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.78rem;
+  font-size: var(--text-caption);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -593,7 +585,7 @@ main {
   font-variant-numeric: tabular-nums;
 }
 .jar-row-left small {
-  font-size: 0.7rem;
+  font-size: var(--text-label);
   font-weight: 600;
   color: var(--muted);
 }
@@ -752,7 +744,7 @@ main {
   justify-content: space-between;
   gap: 8px;
   margin: 22px 4px 8px;
-  font-size: 0.78rem;
+  font-size: var(--text-caption);
   font-weight: 650;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -916,7 +908,7 @@ main {
   height: 20px;
 }
 .tab-label {
-  font-size: 0.68rem;
+  font-size: var(--text-label);
   font-weight: 650;
 }
 .tab.on {
@@ -959,7 +951,7 @@ main {
   border-radius: 99px;
   background: var(--primary-container);
   color: var(--on-primary-container);
-  font-size: 0.9rem;
+  font-size: var(--text-body-s);
   font-weight: 700;
   transition: transform 140ms var(--ease-out);
 }
@@ -985,7 +977,7 @@ main {
   padding: 14px;
   border-radius: 14px;
   background: var(--surface);
-  font-size: 0.85rem;
+  font-size: var(--text-small);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -1183,7 +1175,7 @@ main {
   padding: 0 14px;
   border-radius: 99px;
   background: var(--surface-2);
-  font-size: 0.9rem;
+  font-size: var(--text-body-s);
   font-weight: 550;
   white-space: nowrap;
   transition: transform 140ms var(--ease-out);
@@ -1215,7 +1207,7 @@ main {
   border-radius: 18px;
   background: var(--surface);
   box-shadow: inset 0 0 0 2px transparent;
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   font-weight: 650;
   transition: background-color 160ms ease-out, box-shadow 160ms ease-out, transform 140ms var(--ease-out);
 }
@@ -1242,10 +1234,11 @@ main {
 }
 
 /* Two-option toggle with a sliding thumb. */
+/* Two options by default. For more, set --n (count) and --i (selected index) on .segmented. */
 .segmented {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr));
   padding: 4px;
   border-radius: 99px;
   background: var(--surface-2);
@@ -1255,9 +1248,10 @@ main {
   top: 4px;
   bottom: 4px;
   left: 4px;
-  width: calc(50% - 4px);
+  width: calc((100% - 8px) / var(--n, 2));
   border-radius: 99px;
   background: var(--primary);
+  transform: translateX(calc(var(--i, 0) * 100%));
   transition: transform 240ms var(--ease-out);
 }
 .seg-thumb.right {
@@ -1289,7 +1283,7 @@ main {
   padding: 0 14px;
   border-radius: 99px;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: var(--text-small);
   font-weight: 600;
   box-shadow: inset 0 0 0 1px var(--line);
   transition: background-color 160ms ease-out, color 160ms ease-out, box-shadow 160ms ease-out, transform 140ms var(--ease-out);
@@ -1395,7 +1389,7 @@ main {
 }
 .field.small .field-label {
   padding-left: 4px;
-  font-size: 0.8rem;
+  font-size: var(--text-small);
   color: var(--muted);
 }
 .share-row {

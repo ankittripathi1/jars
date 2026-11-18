@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { cleanAmountInput, parseAmount, rupees } from "./format";
 import { ALL_JARS, BUDGET_JARS, jarLimit, sharesTotal } from "./money";
 import { downloadBackup, parseData } from "./store";
+import { loadTheme, saveTheme, type Theme } from "./theme";
 import type { Data, JarId, Settings as SettingsT } from "./types";
 import { Icons, JAR_LOOK, JarIcon, stagger } from "./ui";
 
@@ -13,6 +14,12 @@ type Props = {
   onRunSetup: () => void;
   onRestore: (d: Data) => void;
 };
+
+const THEMES: { id: Theme; label: string }[] = [
+  { id: "system", label: "System" },
+  { id: "light", label: "Light" },
+  { id: "dark", label: "Dark" },
+];
 
 /** Typed percent -> whole number, or 0 when empty or invalid. */
 const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
@@ -44,6 +51,7 @@ export function Settings({ data, onSettings, onName, onRunSetup, onRestore }: Pr
   const s = data.settings;
   const total = sharesTotal(s);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [theme, setTheme] = useState(loadTheme);
 
   return (
     <>
@@ -122,8 +130,30 @@ export function Settings({ data, onSettings, onName, onRunSetup, onRestore }: Pr
         </button>
       </section>
 
+      <h2 className="section-title">Theme</h2>
+      <section className="card enter" style={stagger(3)}>
+        <div className="segmented" role="radiogroup" aria-label="Theme" style={{ "--n": THEMES.length, "--i": THEMES.findIndex((t) => t.id === theme) } as CSSProperties}>
+          <span className="seg-thumb" aria-hidden />
+          {THEMES.map((t) => (
+            <button
+              type="button"
+              key={t.id}
+              role="radio"
+              aria-checked={theme === t.id}
+              className={theme === t.id ? "seg on" : "seg"}
+              onClick={() => {
+                setTheme(t.id);
+                saveTheme(t.id);
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
       <h2 className="section-title">Backup</h2>
-      <section className="card stack enter" style={stagger(3)}>
+      <section className="card stack enter" style={stagger(4)}>
         <p className="muted small-text">Your data lives only on this phone. Download a backup every week.</p>
         <button className="secondary" onClick={() => downloadBackup(data)}>
           Download backup
@@ -146,7 +176,7 @@ export function Settings({ data, onSettings, onName, onRunSetup, onRestore }: Pr
           }}
         />
       </section>
-      <section className="card stack enter setup-again" style={stagger(4)}>
+      <section className="card stack enter setup-again" style={stagger(5)}>
         <button className="secondary" onClick={onRunSetup}>
           Run setup again
         </button>
