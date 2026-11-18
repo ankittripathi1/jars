@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { rupees } from "./format";
 import type { JarId } from "./types";
 
-/** Color and emoji per jar. Colors are tuned to read on light and dark surfaces. */
+/** Color and emoji per jar. The colors are for fills; text and borders use the --ink variant in styles.css. */
 export const JAR_LOOK: Record<JarId, { color: string; icon: string }> = {
   necessities: { color: "#4f7dd9", icon: "🏠" },
   freedom: { color: "#3e9e6e", icon: "📈" },

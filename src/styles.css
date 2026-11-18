@@ -21,9 +21,9 @@
   --on-primary: light-dark(#ffffff, #00382c);
   --primary-container: light-dark(#e3f4ee, #103b31);
   --on-primary-container: light-dark(#053a2f, #c9f2e5);
-  --pos: light-dark(#16855a, #5bd48f);
-  --neg: light-dark(#d14343, #f07171);
-  --untracked: light-dark(#a0786a, #c49a8b);
+  --pos: light-dark(#127a50, #5bd48f);
+  --neg: light-dark(#bf3636, #f07171);
+  --untracked: light-dark(#8a6455, #c49a8b);
   --scrim: light-dark(rgb(16 20 24 / 0.38), rgb(0 0 0 / 0.6));
   --shadow: none;
 
@@ -684,13 +684,22 @@ main {
   white-space: nowrap;
 }
 
+/*
+ * --ink: the jar color made darker (light mode) or lighter (dark mode) so it reads as text
+ * and borders: at least 4.5:1 on its own tint. The plain --c stays for fills.
+ * Declared where it's used, because var(--c) is set inline per element.
+ */
+.jar-icon,
+.pick.on {
+  --ink: light-dark(color-mix(in srgb, var(--c) 58%, #000), color-mix(in srgb, var(--c) 75%, #fff));
+}
 .jar-icon {
   display: grid;
   flex: none;
   place-items: center;
   border-radius: 99px;
   background: color-mix(in srgb, var(--c) 22%, transparent);
-  color: var(--c);
+  color: var(--ink);
   line-height: 1;
 }
 
@@ -1227,7 +1236,7 @@ main {
 }
 .pick.on {
   background: color-mix(in srgb, var(--c) 20%, var(--surface));
-  box-shadow: inset 0 0 0 2px var(--c);
+  box-shadow: inset 0 0 0 2px var(--ink);
 }
 .pick.on .pick-icon {
   transform: scale(1.12);
